@@ -1,0 +1,31 @@
+version: '3'
+services:
+
+  ldap-clone:
+    image: mlan/openldap
+    networks:
+      - backend
+    ports:
+      - "400:389"
+    volumes:
+      - ./seed:/var/lib/openldap/seed
+
+  ldap-init:
+    image: mlan/openldap
+    networks:
+      - backend
+    ports:
+      - "401:389"
+    environment:
+      - LDAP_DOMAIN=example.com
+      - LDAP_ROOTCN=admin
+      - LDAP_ROOTPW={SSHA}KirjzsjgMvjqBWNNof7ujKhwAZBfXmw3
+
+#      - ldap-conf:/etc/openldap/slapd.d
+#      - ldap-data:/var/lib/openldap
+#volumes:
+#  ldap-conf:
+#  ldap-data:
+
+networks:
+  backend:

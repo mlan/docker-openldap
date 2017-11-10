@@ -1,0 +1,10 @@
+NS = mlan
+VOLUMES = 
+PORTS = -p 400:389
+DOMAIN = \
+ -e LDAP_DOMAIN=example.com \
+ -e LDAP_ROOTCN=admin \
+ -e LDAP_ROOTPW={SSHA}KirjzsjgMvjqBWNNof7ujKhwAZBfXmw3
+ENV =
+
+

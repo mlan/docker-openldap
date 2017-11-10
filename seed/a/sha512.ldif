@@ -1,0 +1,14 @@
+#! sudo ldapmodify -Y EXTERNAL -H ldapi:///
+#
+# new passwords entered for ldap users will use the os crypt backend and SHA512 with salt
+#
+dn: olcDatabase={-1}frontend,cn=config
+changetype: modify
+add: olcPasswordHash
+olcPasswordHash: {CRYPT}
+
+dn: cn=config
+changetype: modify
+add: olcPasswordCryptSaltFormat
+olcPasswordCryptSaltFormat: $6$%.16s
+

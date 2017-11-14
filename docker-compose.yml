@@ -21,11 +21,11 @@ services:
       - LDAP_ROOTCN=admin
       - LDAP_ROOTPW={SSHA}KirjzsjgMvjqBWNNof7ujKhwAZBfXmw3
 
-#      - ldap-conf:/etc/openldap/slapd.d
-#      - ldap-data:/var/lib/openldap
+#      - ldap-config:/etc/openldap/slapd.d
+#      - ldap-users:/var/lib/openldap/openldap-data
 #volumes:
-#  ldap-conf:
-#  ldap-data:
+#  ldap-config:
+#  ldap-users:
 
 networks:
   backend:

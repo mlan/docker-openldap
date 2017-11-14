@@ -1,0 +1,4 @@
+#### Template `.ldif` file directory
+
+Template ldif files can be kept here. 
+This directory is NOT scanned at container startup.

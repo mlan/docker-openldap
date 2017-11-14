@@ -1,10 +1,10 @@
 dn:  olcDatabase={1}mdb,cn=config
 changetype: modify
 replace: olcSuffix
-olcSuffix: dc=openstack,dc=org
+olcSuffix: dc=example,dc=com
 -
 replace: olcRootDN
-olcRootDN: dc=admin,dc=openstack,dc=org
+olcRootDN: dc=admin,dc=example,dc=com
 -
 add: olcRootPW
 olcRootPW: {SSHA}lBDIdfwvZkITal0k9tdhiCUolxpf6anu

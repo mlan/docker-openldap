@@ -19,7 +19,9 @@ RUN 	mkdir -p $LDAP_SEEDDIRa $LDAP_SEEDDIR0 $LDAP_SEEDDIR1 && \
 
 COPY 	entrypoint.sh .
 
-COPY 	seed/a/slapd.ldif $LDAP_SEEDDIRa/.
- 
+COPY 	seed/a/* $LDAP_SEEDDIRa/
+
+HEALTHCHECK CMD ldapwhoami -xH ldapi:// || exit 1
+
 ENTRYPOINT ["/entrypoint.sh"]
 

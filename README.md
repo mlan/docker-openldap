@@ -5,12 +5,9 @@ The [OpenLDAP](https://www.openldap.org/) server is an open source implementatio
 
 # What is does this image do?
 
-![docker build](https://img.shields.io/docker/build/mlan/openldap.svg)
-![image size](https://images.microbadger.com/badges/image/mlan/openldap.svg)
-![docker stars](https://img.shields.io/docker/stars/mlan/openldap.svg)
-![docker pulls](https://img.shields.io/docker/pulls/mlan/openldap.svg)
+![docker build](https://img.shields.io/docker/build/mlan/openldap.svg) ![travis build](https://api.travis-ci.org/mlan/docker-openldap.svg?branch=master) ![image size](https://images.microbadger.com/badges/image/mlan/openldap.svg) ![docker stars](https://img.shields.io/docker/stars/mlan/openldap.svg) ![docker pulls](https://img.shields.io/docker/pulls/mlan/openldap.svg)
 
-This (non official) Docker image contains an [Alpine Linux](https://alpinelinux.org/) based [OpenLDAP](https://www.openldap.org/) Server. The LDAP server is accessible on port 389 using the `ldap://` protocol. The image is designed too to have a small footprint, about 10 MB, and packages needed for secure transfer are _not_ included in this image.
+This (non official) Docker image contains an [Alpine Linux](https://alpinelinux.org/) based [OpenLDAP](https://www.openldap.org/) Server. The LDAP server is accessible on port 389 using the `ldap://` protocol. The image is designed too to have a small footprint, about 10 MB, and therefore packages needed for secure transfer are _not_ included in this image.
 
 The OpenLDAP Server typically holds user login credentials, postal and e-mail addresses and similar pieces of information. This image help integrate an OpenLDAP server with other dockerized services.
 
@@ -66,7 +63,7 @@ $ docker run -d --name openldap -p 389:389 \
 #### Optional: Load user data
 Generate, for example by using a text editor, a LDIF file, `users.ldif` with you user data. Bind to the OpenLDAP server using the `ldapadd` command and the rootdn user credentials.
 ```bash
-$ ldapadd -H ldap://:389 -x -D "cn=admin,dc=example,dc=com" -f users.ldif
+$ ldapadd -H ldap://:389 -x -D "cn=admin,dc=example,dc=com" -W -f users.ldif
 > Enter LDAP Password:
 ```
 Now you can [test that it works](#test-your-openldap-server)
@@ -115,7 +112,7 @@ When you start an mlan/openldap instance, you can adjust its configuration by pa
 
 #### `LDAP_DOMAIN`
 
-This is an optional variable, undefined by default, which when set allows defining/modifying the domain name in the config database. Example usage: `LDAP_DOMAIN=example.com`.
+This is an optional variable, undefined by default, which when set allows defining/modifying the domain name in both the config and the users database. Example usage: `LDAP_DOMAIN=example.com`.
 When you are using seeding files and the domain name defined therein is already the desired one you do not need to set this variable.
 
 #### `LDAP_ROOTCN`
@@ -130,9 +127,18 @@ This is an optional variable, undefined by default, which when set allows defini
 If no seeding files are provided, databases will be created with default configurations and unless `LDAP_ROOTPW` is set the root password is `secret`.
 When you are using seeding files and the root password defined therein is already the desired one you do not need to set this variable.
 
+#### `LDAP_EMAILDOMAIN`
+
+This is an optional variable, undefined by default, which when set allows modifying the email domain in the users database. Example usage: `LDAP_EMAILDOMAIN=example.com` will result in a user email address of `john.doe@example.com`.
+
 #### `LDAP_DONTADDEXTERNAL`
 
 This is an optional variable, undefined by default, which when set to a non-empty string the filters `ldif_unwrap` and `ldif_access` will not be applied.
+
+#### `LDAP_DONTADDDCOBJECT`
+
+This is an optional variable, undefined by default, which when set to a non-empty string prevents seeding of the users database with default `dcObject` when the `LDAP_SEEDDIR1` is empty during seeding.
+This leaves the users database completely empty, should this be desired.
 
 #### `LDAP_CONFDIR`
 
@@ -193,7 +199,7 @@ $ docker exec -it openldap ldapadd -Y EXTERNAL -H ldapi:/// -f /tmp/data.ldif
 
 The users database can normally be managed by connection to the LDAP server by using its tcp port, ldap:// and use simple authentication by using the credentials of the rootdn user 
 ```bash
-$ ldapadd -H ldap:// -x -D "cn=admin,dc=example,dc=com" -f data.ldif
+$ ldapadd -H ldap:// -x -D "cn=admin,dc=example,dc=com" -W -f data.ldif
 > Enter LDAP Password:
 ```
 ## Seeding
@@ -219,7 +225,7 @@ If no `.ldif` or `.sh` files can be found in the `LDAP_SEEDDIR1` directory durin
 Files in the `LDAP_SEEDDIR1` directory are ignored when a users database is present.
 
 #### Default `.ldif` file directory
- 
+
 Default `.ldif` files are kept in the `LDAP_SEEDDIRa` directory. This directory is NOT scanned at container start up, but if the `LDAP_SEEDDIR0` is empty, files with names matching `LDAP_SEEDDIRa/0-*` will be moved to `LDAP_SEEDDIR0` and applied. And similarly if the `LDAP_SEEDDIR1` is empty, files with names matching `LDAP_SEEDDIRa/1-*` will be moved to `LDAP_SEEDDIR1` and applied.
 
 ## LDIF filters
@@ -235,7 +241,7 @@ Since the users databases and their corresponding `.ldif` files can be large, th
 #### `ldif_paths`
 
 Configures file paths used by the ldap server (`slapd`), simplifying reuse of config files.
- 
+
 #### `ldif_unwrap`
 
 Unwraps lines in `.ldif` files, which `slapcat` inserts by default. (Wrapping can be avoided by using `slapcat -o ldif-wrap=no`).
@@ -256,24 +262,30 @@ This filter is used to apply the `LDAP_DOMAIN`, `LDAP_ROOTCN` and `LDAP_ROOTPW` 
 
 This filter is used to apply the `LDAP_DOMAIN` variable to users files. The filter is not run if `LDAP_DOMAIN` is empty.
 
+#### `ldif_email`
+
+This filter is used to apply the `LDAP_EMAILDOMAIN` variable to users files. The filter is not run if `LDAP_EMAILDOMAIN` is empty.
+
 #### `ldif_config`
 
 This collection of filters are potentially applied to config `.ldif` files in the `LDAP_SEEDDIR0` directory during seeding. The filters applied are; `ldif_intern` `ldif_paths` `ldif_suffix` `ldif_unwrap` `ldif_access`.
 
 #### `ldif_users`
 
-This collection of filters are potentially applied to users `.ldif` files in the `LDAP_SEEDDIR1` directory during seeding. The filters applied are; `ldif_intern` `ldif_domain`.
+This collection of filters are potentially applied to users `.ldif` files in the `LDAP_SEEDDIR1` directory during seeding. The filters applied are; `ldif_intern` `ldif_domain` `ldif_email`.
 
-
-## The `ldap` utility
+# The `ldap` utility ##
 
 The command `ldap <cmd> <args>` can be issued on command line from within the container. This command is a wrapper of the docker entrypoint shell script. Its purpose is to ease container management and debugging. Just typing `ldap` will provide a rudimentary help on how to use it.
 
-## Issues Bugs Suggestions
+# Docker Compose ##
+A  [`docker-compose.yml`](docker-compose.yml)  example is included in this repository.
+
+# Issues Bugs Suggestions ##
 
 Feel free to report any bugs or make suggestions [here](https://github.com/mlan/docker-openldap/issues)
 
-# References
+# References ##
 
 This work was inspired by [dweomer/dockerfiles-openldap](https://github.com/dweomer/dockerfiles-openldap)
 

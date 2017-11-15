@@ -1,7 +1,7 @@
 #!/bin/sh -e
 
 #
-# config
+# Config
 #
 
 LDAP_CONFDIR=${LDAP_CONFDIR-/etc/openldap/slapd.d}
@@ -14,7 +14,7 @@ LDAP_SEEDDIR1=${LDAP_SEEDDIR1-/var/lib/openldap/seed/1}
 LDAP_ROOTCN=${LDAP_ROOTCN-admin}
 
 #
-# helpers
+# Helpers
 #
 
 _escape() { echo $1 | sed 's|/|\\\/|g' ;}
@@ -25,17 +25,17 @@ add() {
 	[ "$1" = "-f" ] && $2 "$3" && shift 2
 	ldapmodify $(_isadd "$1") -Y EXTERNAL -H ldapi:/// -f "$1" 2>&1
 }
-addslap() { 
+add0() { 
 	[ "$1" = "-f" ] && $2 "$3" && shift 2
 	slapadd -n 0 -F "$LDAP_CONFDIR" -l "$1" 2>&1
 }
 
 #
-# ldif filters
+# LDIF filters
 #
 
 ldif_intern() {
-	# remove operational entries preventing file from being applied
+	# Remove operational entries preventing file from being applied
 	# since data files can be large, only process file 
 	# if first entry contains an operational entry
 	if [ -n "$(sed '/^dn/,/^$/!d;/entryUUID: /!d;q' $1)" ]; then
@@ -59,18 +59,21 @@ ldif_paths() {
 }
 ldif_unwrap() { sed -i ':a;N;$!ba;s/\n //g' "$1" ;}
 ldif_access() {
-	# insert EXTENAL access if some database is missing it
+	# insert EXTERNAL access if some database is missing it
 	local EXTERNALACCESS='by dn.exact=gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth manage'
 	sed -i -r '/^olcAccess: .*to \* by .*/bX ; p ; d; :X /external/!s/(.*to \* )(by .*)/\1'"$EXTERNALACCESS"' \2/' "$1"
 }
 ldif_suffix() {
-	if [ ! -z "$LDAP_DOMAIN" ]; then 
+	local domain=${2-$LDAP_DOMAIN}
+	local rootcn=${3-$LDAP_ROOTCN}
+	local rootpw=${4-$LDAP_ROOTPW}
+	if [ ! -z "$domain" ]; then 
 		sed -i \
-'/^olcSuffix:/s/\s.*/'" dc=$(_dc $LDAP_DOMAIN)"'/;'\
-'/^olcRootDN:/s/\s.*/'" cn=$LDAP_ROOTCN,dc=$(_dc $LDAP_DOMAIN)"'/' "$1"
+'/^olcSuffix:/s/\s.*/'" dc=$(_dc $domain)"'/;'\
+'/^olcRootDN:/s/\s.*/'" cn=$rootcn,dc=$(_dc $domain)"'/' "$1"
 	fi
-	if [ ! -z "$LDAP_ROOTPW" ]; then
-		sed -i 's/^olcRootPW:.*/'"olcRootPW: $LDAP_ROOTPW"'/' "$1"
+	if [ ! -z "$rootpw" ]; then
+		sed -i 's/^olcRootPW:.*/'"olcRootPW: $rootpw"'/' "$1"
 	fi
 }
 ldif_domain() {
@@ -79,8 +82,13 @@ ldif_domain() {
 		sed -i -r \
 's/([a-z]+: )[ ]*(uid=[^,]*,)?[ ]*(cn=[^,]*,)?[ ]*(ou=[^,]*,)?[ ]*(dc=.*)/\1\2\3\4'"dc=$(_dc $domain)"'/;'\
 's/^o: .*/o: '"$domain"'/;'\
-'s/^dc: .*/dc: '"${domain%%.*}"'/;'\
-'s/(^mail: [^@]*@).*/\1'"$domain"'/' "$1"
+'s/^dc: .*/dc: '"${domain%%.*}"'/' "$1"
+	fi
+}
+ldif_email() {
+	local domain=${2-$LDAP_EMAILDOMAIN}
+	if [ ! -z "$domain" ]; then
+		sed -i -r 's/(^mail: [^@]*@).*/\1'"$domain"'/' "$1"
 	fi
 }
 ldif_config() {
@@ -92,15 +100,16 @@ ldif_config() {
 }
 ldif_users() {
 	ldif_intern "$1" &&
-	ldif_domain "$1"
+	ldif_domain "$1" &&
+	ldif_email  "$1"
 }
 
 #
-# seed dirs search
+# Search seed directories and apply files
 #
 
-load_all0() {
-	# apply cofiguration file(s) if config is missing
+add0_all() {
+	# Apply configuration file(s) if config is missing
 	if [ ! -z "$(slaptest -Q 2>&1)" ]; then
 		mkdir -p $LDAP_CONFDIR
 		local files="$(_findseed "$LDAP_SEEDDIR0")"
@@ -112,17 +121,17 @@ load_all0() {
 		for file in $files ; do
 			case "$file" in
 			*.sh)   echo "$0: sourcing $file"; . "$file" ;;
-			*.ldif) echo "$0: applying $file"; addslap -f "ldif_config" "$file" ;;
+			*.ldif) echo "$0: applying $file"; add0 -f "ldif_config" "$file" ;;
 			esac
 		done
 		chown -R ldap:ldap $LDAP_CONFDIR
 	fi
 }
-load_all1() {
-	# apply files if slapd is running and data is empty
+add_all() {
+	# Apply files if slapd is running and data is empty
 	if [ ! -z "$(pidof slapd)" ] && [ -z "$(slapcat -a '(o=*)')" ]; then
 		local files="$(_findseed "$LDAP_SEEDDIR1")"
-		if [ -z "$files" ]; then
+		if [ -z "$files" ] && [ -z "$LDAP_DONTADDDCOBJECT" ]; then
 			# no files found use default configuration
 			mv $LDAP_SEEDDIRa/1-* $LDAP_SEEDDIR1/.
 			files="$(_findseed "$LDAP_SEEDDIR1")"
@@ -145,23 +154,24 @@ load_all1() {
 help() { echo "
 	ldap <cmd> <args>
 	This command is a wrapper of the docker entrypoint shell script.
-	Its purpuse is to ease container management and debugging.
+	Its purpose is to ease container management and debugging.
 
 	<cmd> group apply ldif
+	add0 [-f <ldif filter>] <ldif file>
 	add [-f <ldif filter>] <ldif file>
-	addslap [-f <ldif filter>] <ldif file>
 
-	<cmd> group apply seeds
-	load_all0
-	load_all1
+	<cmd> group apply ldif in seeding dirs
+	add0_all
+	add_all
 
 	<cmd> group ldif filters:
 	ldif_intern	<ldif file>
 	ldif_paths 	<ldif file>
 	ldif_unwrap	<ldif file>
 	ldif_access	<ldif file>
-	ldif_suffix	<ldif file>
+	ldif_suffix	<ldif file> <domain> <rootcn> <rootpw>
 	ldif_domain	<ldif file> <domain>
+	ldif_email	<ldif file> <domain>
 	ldif_config	<ldif file>
 	ldif_users	<ldif file>
 	"
@@ -178,31 +188,31 @@ interactive() {
 }
 
 #
-# Limiting the open file descritors prevent exessive memory consumption by slapd
+# Limiting the open file descriptors prevent excessive memory consumption by slapd
 #
 
 ulimit -n 8192
 
 #
-# run
+# Run
 #
 
 interactive $@
 
 #
-# apply configurations
+# Apply configurations
 #
  
-load_all0
+add0_all
 
 #
-# wait for slapd to start and then apply files in the backgroud
+# Wait for slapd to start and then apply files in the background
 #
 
-( sleep 2 ; load_all1 ) &
+( sleep 2 ; add_all ) &
 
 #
-# start slapd if needed. if this shell is non interactive replace its process with slapd
+# Start slapd if needed.
 #
 
 if [ -z "$(pidof slapd)" ]; then

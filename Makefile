@@ -16,14 +16,16 @@ build:
 build-force: stop purge build
 
 build-version: dockerfile
-	docker build -t $(NS)/$(IMAGE_NAME):$(VERSION) -f $(VERSION)/Dockerfile .
+	docker build -t $(NS)/$(IMAGE_NAME):$(VERSION) -f $(VERSION)/Dockerfile $(VERSION)/.
 
 build-all: build
 	for ver in 3.6 3.5 3.4; do $(MAKE) build-version -e VERSION=$$ver; done
 	
 dockerfile:
-	mkdir -p $(VERSION)
+	mkdir -p $(VERSION)/seed
 	sed -r 's/(FROM\s*alpine)/\1:'"$(VERSION)"'/' Dockerfile >$(VERSION)/Dockerfile
+	cp entrypoint.sh $(VERSION)/entrypoint.sh
+	cp -r seed/a $(VERSION)/seed/a/
 
 shell:
 	docker run --rm --name $(CONTAINER_NAME)-$(CONTAINER_INSTANCE) -i -t $(PORTS) $(VOLUMES) $(ENV) $(NS)/$(IMAGE_NAME):$(VERSION) $(SHELL)

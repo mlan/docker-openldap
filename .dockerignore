@@ -8,6 +8,8 @@ README.md
 local
 seed/0/*
 seed/1/*
+seed/b
 !seed/0/README0.txt
 !seed/1/README1.txt
+3.*
 

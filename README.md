@@ -202,7 +202,7 @@ $ docker cp seed/b/190-users.ldif openldap:/tmp/190-users.ldif
 $ docker exec -it openldap ldapadd -Y EXTERNAL -H ldapi:/// -f /tmp/190-users.ldif
 ```
 
-You can also use [the `ldap` utility](#ldap-utility) to access the LDAP server using its socket.
+You can also use [the `ldap` utility](#the-ldap-utility) to access the LDAP server using its socket.
 
 #### Use the ldap:// tcp port and simple authentication
 

@@ -142,7 +142,8 @@ test6:
 	docker cp seed/b/190-users.ldif openldap_6:/var/lib/openldap/seed/1/
 	docker start openldap_6
 	sleep 3
-	ldapsearch -H ldap://:406 -xLLL -b "dc=example,dc=com" '(&(objectclass=person)(cn=Par Robert))' mail \
+	ldapsearch -H ldap://:406 -xLLL -b "dc=example,dc=com" \ 
+	'(&(objectclass=person)(cn=Par Robert))' mail \
 	| grep 'mail: RobertP@ns-mail2.com'
 	docker stop openldap_6
 
@@ -156,7 +157,8 @@ test7:
 	docker cp seed/b/190-users.ldif openldap_7:/var/lib/openldap/seed/1/
 	docker start openldap_7
 	sleep 3
-	ldapsearch -H ldap://:407 -xLLL -b "dc=directory,dc=dotcom,dc=info" '(&(objectclass=person)(cn=Par Robert))' mail \
+	ldapsearch -H ldap://:407 -xLLL -b "dc=directory,dc=dotcom,dc=info" \
+	'(&(objectclass=person)(cn=Par Robert))' mail \
 	| grep 'mail: RobertP@gmail.com'
 	docker stop openldap_7
 
@@ -169,7 +171,8 @@ test8:
 	docker cp seed/b/190-users.ldif openldap_8:/var/lib/openldap/seed/1/
 	docker start openldap_8
 	sleep 3
-	ldapsearch -H ldap://:408 -xLLL -b "dc=example,dc=com" '(&(objectclass=person)(cn=Par Robert))' mail \
+	ldapsearch -H ldap://:408 -xLLL -b "dc=example,dc=com" \
+	'(&(objectclass=person)(cn=Par Robert))' mail \
 	| grep 'mail: RobertP@ns-mail2.com'
 	docker stop openldap_8
 
@@ -191,7 +194,8 @@ test9:
 	docker exec -it openldap_9 ldap add -f 'ldif_users' /var/lib/openldap/seed/b/191-user.ldif
 	docker exec -it openldap_9 ldap add -f 'ldif_users' /var/lib/openldap/seed/b/192-delete.ldif
 	docker exec -it openldap_9 ldap add -f 'ldif_users' /var/lib/openldap/seed/b/193-rename.ldif
-	ldapsearch -H ldap://:409 -xLLL -b "dc=ldap,dc=my-domain,dc=org" '(&(objectclass=person)(cn=Harm Coddington))' mail
-	#| grep 'mail: CoddingH@ns-mail6.com'
+	ldapsearch -H ldap://:409 -xLLL -b "dc=ldap,dc=my-domain,dc=org" \
+	'(&(objectclass=person)(cn=Harm Coddington))' mail \
+	| grep 'mail: CoddingH@ns-mail6.com'
 	docker stop openldap_9
 

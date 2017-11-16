@@ -1,0 +1,30 @@
+dn: cn=Harm Coddington,ou=Janitorial,dc=example,dc=com
+changetype: add
+objectClass: top
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+cn: Harm Coddington
+sn: Coddington
+description: This is Harm Coddington's description
+facsimileTelephoneNumber: +1 818 296-1289
+l: Cupertino
+ou: Janitorial
+postalAddress: Janitorial$Cupertino
+telephoneNumber: +1 818 903-2020
+title: Junior Janitorial Sales Rep
+userPassword: Password1
+uid: CoddingH
+givenName: Harm
+mail: CoddingH@ns-mail6.com
+carLicense: 00UR62
+departmentNumber: 6259
+employeeType: Employee
+homePhone: +1 818 226-3887
+initials: H. C.
+mobile: +1 818 858-6704
+pager: +1 818 524-2961
+roomNumber: 9651
+secretary: cn=Ester Manuel,ou=Product Testing,dc=example,dc=com
+manager: cn=Lynnea Pufpaff,ou=Management,dc=example,dc=com
+

@@ -5,4 +5,4 @@ The `*.ldif` files will be applied to the database by either using ldapadd or ld
 
 Files in the `LDAP_SEEDDIR1` directory are ignored when a users database is present.
 
-If no `.ldif` or `.sh` files can be found in the `LDAP_SEEDDIR1` directory during seeding the files matching `LDAP_SEEDDIRa/1-*` will be moved here and applied.
+If no `.ldif` or `.sh` files can be found in the `LDAP_SEEDDIR1` directory during seeding the files matching `LDAP_SEEDDIRa/1*` will be moved here and applied.

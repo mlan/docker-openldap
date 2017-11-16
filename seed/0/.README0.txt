@@ -5,5 +5,5 @@ The `*.ldif` files will be applied to the database by using slapadd and `*.sh` f
 
 Files in the `LDAP_SEEDDIR0` directory are ignored when a config database is present.
 
-If no `.ldif` or `.sh` files can be found in the `LDAP_SEEDDIR0` directory during seeding the files matching `LDAP_SEEDDIRa/0-*` will be moved here and applied.
+If no `.ldif` or `.sh` files can be found in the `LDAP_SEEDDIR0` directory during seeding the files matching `LDAP_SEEDDIRa/0*` will be moved here and applied.
 

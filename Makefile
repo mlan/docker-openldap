@@ -8,12 +8,22 @@ CONTAINER_NAME ?= openldap
 CONTAINER_INSTANCE ?= default
 SHELL ?= /bin/sh
 
-.PHONY: build build-force push shell exec run run-fg start stop rm-container rm-image purge release export copy create  sleep testall test1 test2 test3 test4 test5 test6 test7 test8 test9
+.PHONY: build build-version build-all dockerfile build-force push shell exec run run-fg start stop rm-container rm-image purge release export copy create  sleep testall testall-all test1 test2 test3 test4 test5 test6 test7 test8 test9
 
-build: Dockerfile
+build: 
 	docker build -t $(NS)/$(IMAGE_NAME):$(VERSION) -f Dockerfile .
 
 build-force: stop purge build
+
+build-version: dockerfile
+	docker build -t $(NS)/$(IMAGE_NAME):$(VERSION) -f $(VERSION)/Dockerfile .
+
+build-all: build
+	for ver in 3.6 3.5 3.4; do $(MAKE) build-version -e VERSION=$$ver; done
+	
+dockerfile:
+	mkdir -p $(VERSION)
+	sed -r 's/(FROM\s*alpine)/\1:'"$(VERSION)"'/' Dockerfile >$(VERSION)/Dockerfile
 
 shell:
 	docker run --rm --name $(CONTAINER_NAME)-$(CONTAINER_INSTANCE) -i -t $(PORTS) $(VOLUMES) $(ENV) $(NS)/$(IMAGE_NAME):$(VERSION) $(SHELL)
@@ -61,6 +71,9 @@ default: build
 
 testall: test1 test2 test3 test4 test5 test6 test7 test8 test9 
 
+testall-all: testall
+	for ver in 3.6 3.5 3.4; do $(MAKE) testall -e VERSION=$$ver; done	
+
 test1:
 	# test1: default config, no seeds
 	docker run -d --rm --name openldap_1 -p 401:389 \
@@ -101,7 +114,7 @@ test4:
 	$(NS)/$(IMAGE_NAME):$(VERSION)
 	sleep 3
 	docker cp seed openldap_4:/var/lib/openldap/
-	docker exec -it openldap_4 ldap add /var/lib/openldap/seed/b/sha512.ldif
+	docker exec -it openldap_4 ldap add /var/lib/openldap/seed/b/181-sha512.ldif
 	ldapsearch -H ldap://:404 -xLLL -b "dc=example,dc=com" o=* \
 	| grep 'dn: dc=example,dc=com'
 	docker stop openldap_4
@@ -112,8 +125,8 @@ test5:
 	-e LDAP_DONTADDDCOBJECT=true \
 	$(NS)/$(IMAGE_NAME):$(VERSION)
 	sleep 3
-	ldapadd -H ldap://:405 -x -D "cn=admin,dc=example,dc=com" -w 'secret' -f seed/a/1-dc.ldif
-	ldapadd -H ldap://:405 -x -D "cn=admin,dc=example,dc=com" -w 'secret' -f seed/b/users.ldif >/dev/null
+	ldapadd -H ldap://:405 -x -D "cn=admin,dc=example,dc=com" -w 'secret' -f seed/a/110-dc.ldif
+	ldapadd -H ldap://:405 -x -D "cn=admin,dc=example,dc=com" -w 'secret' -f seed/b/190-users.ldif >/dev/null
 	sleep 3
 	ldapsearch -H ldap://:405 -xLLL -b "dc=example,dc=com" '(&(objectclass=person)(cn=Par Robert))' mail \
 	| grep 'mail: RobertP@ns-mail2.com'
@@ -123,8 +136,8 @@ test6:
 	# test6: default config, seed users.ldif
 	docker create --rm --name openldap_6 -p 406:389 \
 	$(NS)/$(IMAGE_NAME):$(VERSION)
-	docker cp seed/a/1-*.ldif openldap_6:/var/lib/openldap/seed/1/
-	docker cp seed/b/users.ldif openldap_6:/var/lib/openldap/seed/1/
+	docker cp seed/a/110-dc.ldif openldap_6:/var/lib/openldap/seed/1/
+	docker cp seed/b/190-users.ldif openldap_6:/var/lib/openldap/seed/1/
 	docker start openldap_6
 	sleep 3
 	ldapsearch -H ldap://:406 -xLLL -b "dc=example,dc=com" '(&(objectclass=person)(cn=Par Robert))' mail \
@@ -137,8 +150,8 @@ test7:
 	-e LDAP_DOMAIN=directory.dotcom.info \
 	-e LDAP_EMAILDOMAIN=gmail.com \
 	$(NS)/$(IMAGE_NAME):$(VERSION)
-	docker cp seed/a/1-*.ldif openldap_7:/var/lib/openldap/seed/1/
-	docker cp seed/b/users.ldif openldap_7:/var/lib/openldap/seed/1/
+	docker cp seed/a/110-dc.ldif openldap_7:/var/lib/openldap/seed/1/
+	docker cp seed/b/190-users.ldif openldap_7:/var/lib/openldap/seed/1/
 	docker start openldap_7
 	sleep 3
 	ldapsearch -H ldap://:407 -xLLL -b "dc=directory,dc=dotcom,dc=info" '(&(objectclass=person)(cn=Par Robert))' mail \
@@ -149,9 +162,9 @@ test8:
 	# test8: seed config.ldif, seed users.ldif
 	docker create --rm --name openldap_8 -p 408:389 \
 	$(NS)/$(IMAGE_NAME):$(VERSION)
-	docker cp seed/b/config.ldif openldap_8:/var/lib/openldap/seed/0/
-	docker cp seed/a/1-*.ldif openldap_8:/var/lib/openldap/seed/1/
-	docker cp seed/b/users.ldif openldap_8:/var/lib/openldap/seed/1/
+	docker cp seed/b/009-config.ldif openldap_8:/var/lib/openldap/seed/0/
+	docker cp seed/a/110-dc.ldif openldap_8:/var/lib/openldap/seed/1/
+	docker cp seed/b/190-users.ldif openldap_8:/var/lib/openldap/seed/1/
 	docker start openldap_8
 	sleep 3
 	ldapsearch -H ldap://:408 -xLLL -b "dc=example,dc=com" '(&(objectclass=person)(cn=Par Robert))' mail \
@@ -165,12 +178,18 @@ test9:
 	-e LDAP_ROOTCN=Manager \
 	-e LDAP_ROOTPW={SSHA}KirjzsjgMvjqBWNNof7ujKhwAZBfXmw3 \
 	$(NS)/$(IMAGE_NAME):$(VERSION)
-	docker cp seed/b/config.ldif openldap_9:/var/lib/openldap/seed/0/
-	docker cp seed/a/1-*.ldif openldap_9:/var/lib/openldap/seed/1/
-	docker cp seed/b/users.ldif openldap_9:/var/lib/openldap/seed/1/
+	docker cp seed/b/009-config.ldif openldap_9:/var/lib/openldap/seed/0/
+	docker cp seed/a/110-dc.ldif openldap_9:/var/lib/openldap/seed/1/
+	docker cp seed/b/190-users.ldif openldap_9:/var/lib/openldap/seed/1/
 	docker start openldap_9
 	sleep 3
-	ldapsearch -H ldap://:409 -xLLL -b "dc=ldap,dc=my-domain,dc=org" '(&(objectclass=person)(cn=Par Robert))' mail \
-	| grep 'mail: RobertP@ns-mail2.com'
+	docker cp seed/b openldap_9:/var/lib/openldap/seed/
+	#docker cp seed/b/192-delete.ldif openldap_9:/var/lib/openldap/seed/b/
+	#docker cp seed/b/193-rename.ldif openldap_9:/var/lib/openldap/seed/b/
+	docker exec -it openldap_9 ldap add -f 'ldif_users' /var/lib/openldap/seed/b/191-user.ldif
+	docker exec -it openldap_9 ldap add -f 'ldif_users' /var/lib/openldap/seed/b/192-delete.ldif
+	docker exec -it openldap_9 ldap add -f 'ldif_users' /var/lib/openldap/seed/b/193-rename.ldif
+	ldapsearch -H ldap://:409 -xLLL -b "dc=ldap,dc=my-domain,dc=org" '(&(objectclass=person)(cn=Harm Coddington))' mail
+	#| grep 'mail: CoddingH@ns-mail6.com'
 	docker stop openldap_9
 

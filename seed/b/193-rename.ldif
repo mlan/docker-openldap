@@ -1,0 +1,6 @@
+dn: cn=Sandrine Hubal,ou=Administrative,dc=example,dc=com
+changetype: modrdn
+newrdn: cn=Sandy Hubal
+deleteoldrdn: 1
+
+

@@ -1,0 +1,2 @@
+dn: cn=Lennart Dao,ou=Peons,dc=example,dc=com
+changetype: delete

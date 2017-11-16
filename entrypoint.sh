@@ -19,7 +19,7 @@ LDAP_ROOTCN=${LDAP_ROOTCN-admin}
 
 _escape() { echo $1 | sed 's|/|\\\/|g' ;}
 _dc() { echo "$1" | sed 's/\./,dc=/g' ;}
-_isadd() { [ -z "$(sed '1,5!d;/changetype: modify/!d;q' $1)" ] && echo "-a" ;} 
+_isadd() { [ -z "$(sed '1,1000!d;/changetype: /!d;q' $1)" ] && echo "-a" ;} 
 _findseed() { find "$1" -type f -iname '*.ldif' -o -iname '*.sh' | sort ;}
 add() { 
 	[ "$1" = "-f" ] && $2 "$3" && shift 2
@@ -115,7 +115,7 @@ add0_all() {
 		local files="$(_findseed "$LDAP_SEEDDIR0")"
 		if [ -z "$files" ]; then
 			# no files found use default configuration
-			mv $LDAP_SEEDDIRa/0-* $LDAP_SEEDDIR0/.
+			mv $LDAP_SEEDDIRa/0* $LDAP_SEEDDIR0/.
 			files="$(_findseed "$LDAP_SEEDDIR0")"
 		fi
 		for file in $files ; do
@@ -133,7 +133,7 @@ add_all() {
 		local files="$(_findseed "$LDAP_SEEDDIR1")"
 		if [ -z "$files" ] && [ -z "$LDAP_DONTADDDCOBJECT" ]; then
 			# no files found use default configuration
-			mv $LDAP_SEEDDIRa/1-* $LDAP_SEEDDIR1/.
+			mv $LDAP_SEEDDIRa/1* $LDAP_SEEDDIR1/.
 			files="$(_findseed "$LDAP_SEEDDIR1")"
 		fi
 		for file in $files ; do

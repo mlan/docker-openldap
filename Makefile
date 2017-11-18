@@ -7,7 +7,7 @@ IMAGE_NAME ?= openldap
 CONTAINER_NAME ?= openldap
 CONTAINER_INSTANCE ?= default
 SHELL ?= /bin/sh
-SLEEPTIME ?= 5
+SLEEPTIME ?= 9
 
 .PHONY: build build-version build-all dockerfile build-force push shell exec run run-fg start stop rm-container rm-image purge release export copy create  sleep testall testall-all test1 test2 test3 test4 test5 test6 test7 test8 test9
 
@@ -92,7 +92,7 @@ test2:
 	-e LDAP_DOMAIN=example.com \
 	-e LDAP_ROOTCN=admin \
 	-e LDAP_ROOTPW={SSHA}KirjzsjgMvjqBWNNof7ujKhwAZBfXmw3 \
-	-e LDAP_UIDGID=120:127 \
+	-e LDAP_UIDGID=9001:9001 \
 	$(NS)/$(IMAGE_NAME):$(VERSION)
 	sleep $(SLEEPTIME)
 	ldapsearch -H ldap://:402 -xLLL -b "dc=example,dc=com" "o=*" \

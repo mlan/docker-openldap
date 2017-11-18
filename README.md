@@ -147,6 +147,10 @@ This is an optional variable, undefined by default, which when set to a non-empt
 This is an optional variable, undefined by default, which when set to a non-empty string prevents seeding of the users database with default domain component entry,  `dcObject`, when the `LDAP_SEEDDIR1` is empty during seeding.
 This leaves the users database completely empty, should this be desired.
 
+#### `LDAP_UIDGID`
+
+This is an optional variable, undefined by default, which when set allows modifying the `uid` and `gid` of the ldap user running `slapd` inside the container. Example usage: `LDAP_UIDGID=120:127` will set the ldap user `uid` to 120 and its `gid` to 127.
+
 #### `LDAP_CONFDIR`
 
 This is an optional variable, set to `/etc/openldap/slapd.d` by default, which when set can be used to change the location of the config database.
@@ -179,9 +183,10 @@ This is an optional variable, set to `/var/lib/openldap/seed/a` by default, whic
 
 By default docker will store the databases within the container. Often it is useful to create a data directory on the host system (outside the container) and mount this to a directory visible from inside the container. This places the database files in a known location on the host system, and makes it easy for tools and applications on the host system to access the files.
 
-Start the openldap container like this
+To have persistent storage, you can start the openldap container like this, where we also set the `uid` and `gid` of the user running `slapd` inside the container:
 ```bash
 $ docker run -d --name openldap -p 389:389 \
+  -e LDAP_UIDGID=120:127 \
   -v "$(pwd)"/seed:/var/lib/openldap/seed \
   -v ldap-config:/etc/openldap/slapd.d \
   -v ldap-users:/var/lib/openldap/openldap-data \

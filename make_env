@@ -1,6 +1,6 @@
 NS = mlan
 VOLUMES = 
 PORTS = -p 400:389
-ENV =
+ENV = -e LDAP_UIDGID=120:127
 
 

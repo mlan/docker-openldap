@@ -124,7 +124,9 @@ add0_all() {
 			*.ldif) echo "$0: applying $file"; add0 -f "ldif_config" "$file" ;;
 			esac
 		done
-		chown -R ldap:ldap $LDAP_CONFDIR
+		chown -R ldap:ldap $LDAP_CONFDIR/..
+		chown -R ldap:ldap $LDAP_USERDIR/..
+		chown -R ldap:ldap $LDAP_RUNDIR
 	fi
 }
 add_all() {
@@ -144,6 +146,22 @@ add_all() {
 		done
 	else
 		echo "$0: slapd is not running, but normally it should. Files in $LDAP_SEEDDIR1 (if any) are not applied"
+	fi
+}
+
+#
+# change ldap uid and gid
+#
+
+update_uidgid() {
+	if [ ! -z "$LDAP_UIDGID" ]; then
+		uid=${LDAP_UIDGID%:*}
+		local _gid=${LDAP_UIDGID#*:}
+		gid=${_gid-$uid}
+		deluser ldap
+		#delgroup ldap
+		addgroup -g $gid -S ldap
+		adduser -u $uid -D -S -h /usr/lib/openldap -s /sbin/nologin -g 'OpenLDAP User' -G ldap ldap
 	fi
 }
 
@@ -194,10 +212,16 @@ interactive() {
 ulimit -n 8192
 
 #
-# Run
+# Allow interactive mode
 #
 
 interactive $@
+
+#
+# Potentially change ldap uid and gid
+#
+
+update_uidgid
 
 #
 # Apply configurations

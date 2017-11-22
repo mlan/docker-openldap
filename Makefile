@@ -7,6 +7,7 @@ IMAGE_NAME ?= openldap
 CONTAINER_NAME ?= openldap
 CONTAINER_INSTANCE ?= default
 SHELL ?= /bin/sh
+
 SLEEPTIME ?= 9
 
 .PHONY: build build-version build-all dockerfile build-force push shell exec run run-fg start stop rm-container rm-image purge release export copy create  sleep testall testall-all test1 test2 test3 test4 test5 test6 test7 test8 test9
@@ -88,16 +89,23 @@ test1:
 
 test2:
 	# test2: DOMAIN ROOTCN ROOTPW UIDGID repeating default config, no seeds
-	docker run -d --rm --name openldap_2 -p 402:389 \
+	docker run -d --name openldap_2 -p 402:389 \
 	-e LDAP_DOMAIN=example.com \
 	-e LDAP_ROOTCN=admin \
 	-e LDAP_ROOTPW={SSHA}KirjzsjgMvjqBWNNof7ujKhwAZBfXmw3 \
-	-e LDAP_UIDGID=9001:9001 \
+	-e LDAP_UIDGID=1000 \
 	$(NS)/$(IMAGE_NAME):$(VERSION)
 	sleep $(SLEEPTIME)
+	docker stop openldap_2
+	docker start openldap_2
+	docker stop openldap_2
+	docker start openldap_2
+	sleep $(SLEEPTIME)
+	docker exec -it openldap_2 ls -lna /var/lib/openldap/ /var/lib/openldap/openldap-data
 	ldapsearch -H ldap://:402 -xLLL -b "dc=example,dc=com" "o=*" \
 	| grep 'dn: dc=example,dc=com'
 	docker stop openldap_2
+	docker rm openldap_2
 
 test3:
 	# test3: DOMAIN ROOTCN ROOTPW, no seeds
@@ -116,9 +124,9 @@ test4:
 	docker run -d --rm --name openldap_4 -p 404:389 \
 	-e LDAP_DONTADDEXTERNAL=true \
 	$(NS)/$(IMAGE_NAME):$(VERSION)
-	docker cp seed openldap_4:/var/lib/openldap/
-	docker exec -it openldap_4 ldap add /var/lib/openldap/seed/b/181-sha512.ldif
 	sleep $(SLEEPTIME)
+	docker cp seed/b openldap_4:/var/lib/openldap/seed/
+	docker exec -it openldap_4 ldap add /var/lib/openldap/seed/b/181-sha512.ldif
 	ldapsearch -H ldap://:404 -xLLL -b "dc=example,dc=com" "o=*" \
 	| grep 'dn: dc=example,dc=com'
 	docker stop openldap_4

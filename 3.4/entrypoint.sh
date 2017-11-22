@@ -124,9 +124,8 @@ add0_all() {
 			*.ldif) echo "$0: applying $file"; add0 -f "ldif_config" "$file" ;;
 			esac
 		done
-		chown -R ldap:ldap $LDAP_CONFDIR/..
-		chown -R ldap:ldap $LDAP_USERDIR/..
-		chown -R ldap:ldap $LDAP_RUNDIR
+	else
+		echo "$0: slaptest OK. Files in $LDAP_SEEDDIR0 (if any) will not be reapplied"
 	fi
 }
 add_all() {
@@ -153,16 +152,34 @@ add_all() {
 # change ldap uid and gid
 #
 
-update_uidgid() {
+ldap_chid() {
+	local uidgid=${1-$LDAP_UIDGID}
+	# attempt to change ldap uid and gid only if LDAP_UIDGID is not empty
 	if [ ! -z "$LDAP_UIDGID" ]; then
-		uid=${LDAP_UIDGID%:*}
-		local _gid=${LDAP_UIDGID#*:}
+		uid=${uidgid%:*}
+		local _gid=${uidgid#*:}
 		gid=${_gid-$uid}
-		deluser ldap
-		#delgroup ldap
-		addgroup -g $gid -S ldap
-		adduser -u $uid -D -S -h /usr/lib/openldap -s /sbin/nologin -g 'OpenLDAP User' -G ldap ldap
+		# do not change ldap uid and gid if the uid is already set
+		if [ ! $(getent passwd $uid > /dev/null) ]; then
+			echo "$0: Will update ldap to $uid:$gid"
+			deluser ldap
+			addgroup -g $gid -S ldap
+			adduser -u $uid -D -S -h /usr/lib/openldap -s /sbin/nologin -g 'OpenLDAP User' -G ldap ldap
+		else
+			echo "$0: NOT updating since ldap is $(id -u ldap):$(id -g ldap)"
+		fi
 	fi
+}
+
+#
+# make sure ldap owns its files
+#
+
+ldap_chown() {
+	# can use -R as argument
+	chown "$1" ldap:ldap $LDAP_CONFDIR/..
+	chown "$1" ldap:ldap $LDAP_USERDIR/..
+	chown "$1" ldap:ldap $LDAP_RUNDIR
 }
 
 #
@@ -173,16 +190,20 @@ help() { echo "
 	ldap <cmd> <args>
 	This command is a wrapper of the docker entrypoint shell script.
 	Its purpose is to ease container management and debugging.
-
-	<cmd> group apply ldif
+	
+	<cmd> group: ldap user
+	ldap_chid [<uid:gid>]
+	ldap_chown [-R]
+	
+	<cmd> group: apply ldif
 	add0 [-f <ldif filter>] <ldif file>
 	add [-f <ldif filter>] <ldif file>
 
-	<cmd> group apply ldif in seeding dirs
+	<cmd> group: apply ldif in seeding dirs
 	add0_all
 	add_all
 
-	<cmd> group ldif filters:
+	<cmd> group: ldif filters:
 	ldif_intern	<ldif file>
 	ldif_paths 	<ldif file>
 	ldif_unwrap	<ldif file>
@@ -221,13 +242,14 @@ interactive $@
 # Potentially change ldap uid and gid
 #
 
-update_uidgid
+ldap_chid
 
 #
 # Apply configurations
 #
  
 add0_all
+ldap_chown -R
 
 #
 # Wait for slapd to start and then apply files in the background
@@ -236,11 +258,11 @@ add0_all
 ( sleep 2 ; add_all ) &
 
 #
-# Start slapd if needed.
+# Start slapd (if needed).
 #
 
 if [ -z "$(pidof slapd)" ]; then
-	exec slapd -d -256 -u ldap -g ldap -h "ldap:/// ldapi:///" -F $LDAP_CONFDIR
+	exec slapd -d 256 -u ldap -g ldap -h "ldap:/// ldapi:///" -F $LDAP_CONFDIR
 fi
 
 

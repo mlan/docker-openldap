@@ -149,8 +149,8 @@ This leaves the users database completely empty, should this be desired.
 
 #### `LDAP_LOGLEVEL`
 
-This is an optional variable, set to 2048 by default. Set to empty to allow the `ocLogLevel` database parameter 
-to take precidence.
+This is an optional variable, set to 2048 by default. Set to empty to allow the
+`olcLogLevel` database parameter to take precidence.
 
 #### `LDAP_UIDGID`
 

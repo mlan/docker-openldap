@@ -147,6 +147,11 @@ This is an optional variable, undefined by default, which when set to a non-empt
 This is an optional variable, undefined by default, which when set to a non-empty string prevents seeding of the users database with default domain component entry,  `dcObject`, when the `LDAP_SEEDDIR1` is empty during seeding.
 This leaves the users database completely empty, should this be desired.
 
+#### `LDAP_LOGLEVEL`
+
+This is an optional variable, set to 2048 by default. Set to empty to allow the `ocLogLevel` database parameter 
+to take precidence.
+
 #### `LDAP_UIDGID`
 
 This is an optional variable, undefined by default, which when set allows modifying the `uid` and `gid` of the ldap user running `slapd` inside the container. Example usage: `LDAP_UIDGID=120:127` will set the ldap user `uid` to 120 and its `gid` to 127.

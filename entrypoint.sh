@@ -12,6 +12,7 @@ LDAP_SEEDDIRa=${LDAP_SEEDDIRa-/var/lib/openldap/seed/a}
 LDAP_SEEDDIR0=${LDAP_SEEDDIR0-/var/lib/openldap/seed/0}
 LDAP_SEEDDIR1=${LDAP_SEEDDIR1-/var/lib/openldap/seed/1}
 LDAP_ROOTCN=${LDAP_ROOTCN-admin}
+LDAP_LOGLEVEL=${LDAP_LOGLEVEL-2048}
 
 #
 # Helpers
@@ -19,13 +20,13 @@ LDAP_ROOTCN=${LDAP_ROOTCN-admin}
 
 _escape() { echo $1 | sed 's|/|\\\/|g' ;}
 _dc() { echo "$1" | sed 's/\./,dc=/g' ;}
-_isadd() { [ -z "$(sed '1,1000!d;/changetype: /!d;q' $1)" ] && echo "-a" ;} 
+_isadd() { [ -z "$(sed '1,1000!d;/changetype: /!d;q' $1)" ] && echo "-a" ;}
 _findseed() { find "$1" -type f -iname '*.ldif' -o -iname '*.sh' | sort ;}
-add() { 
+add() {
 	[ "$1" = "-f" ] && $2 "$3" && shift 2
 	ldapmodify $(_isadd "$1") -Y EXTERNAL -H ldapi:/// -f "$1" 2>&1
 }
-add0() { 
+add0() {
 	[ "$1" = "-f" ] && $2 "$3" && shift 2
 	slapadd -n 0 -F "$LDAP_CONFDIR" -l "$1" 2>&1
 }
@@ -36,7 +37,7 @@ add0() {
 
 ldif_intern() {
 	# Remove operational entries preventing file from being applied
-	# since data files can be large, only process file 
+	# since data files can be large, only process file
 	# if first entry contains an operational entry
 	if [ -n "$(sed '/^dn/,/^$/!d;/entryUUID: /!d;q' $1)" ]; then
 		sed -i.bak \
@@ -67,7 +68,7 @@ ldif_suffix() {
 	local domain=${2-$LDAP_DOMAIN}
 	local rootcn=${3-$LDAP_ROOTCN}
 	local rootpw=${4-$LDAP_ROOTPW}
-	if [ ! -z "$domain" ]; then 
+	if [ ! -z "$domain" ]; then
 		sed -i \
 '/^olcSuffix:/s/\s.*/'" dc=$(_dc $domain)"'/;'\
 '/^olcRootDN:/s/\s.*/'" cn=$rootcn,dc=$(_dc $domain)"'/' "$1"
@@ -190,11 +191,11 @@ help() { echo "
 	ldap <cmd> <args>
 	This command is a wrapper of the docker entrypoint shell script.
 	Its purpose is to ease container management and debugging.
-	
+
 	<cmd> group: ldap user
 	ldap_chid [<uid:gid>]
 	ldap_chown [-R]
-	
+
 	<cmd> group: apply ldif
 	add0 [-f <ldif filter>] <ldif file>
 	add [-f <ldif filter>] <ldif file>
@@ -217,7 +218,7 @@ help() { echo "
 }
 interactive() {
 	if [ "$(basename $0)" = ldap ]; then
-		if [ -n "$1" ]; then 
+		if [ -n "$1" ]; then
 			$@
 		else
 			help
@@ -247,7 +248,7 @@ ldap_chid
 #
 # Apply configurations
 #
- 
+
 add0_all
 ldap_chown -R
 

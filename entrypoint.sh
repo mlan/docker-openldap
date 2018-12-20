@@ -1,6 +1,12 @@
 #!/bin/sh -e
 
 #
+# TODO
+# 1) update help
+# 2) explore if seeding can be done better. Now we need to create, copy, start
+#
+
+#
 # Config
 #
 
@@ -100,6 +106,9 @@ add1() {
 	[ "$1" = "-f" ] && $2 "$3" && shift 2
 	ldapmodify $(_isadd "$1") -Y EXTERNAL -H ldapi://$(_escurl $LDAP_PCISOCK)/ -f "$1" 2>&1
 }
+
+search() { ldapsearch -Y EXTERNAL -H ldapi://$(_escurl $LDAP_PCISOCK)/ $* ;}
+modify() { ldapmodify -Y EXTERNAL -H ldapi://$(_escurl $LDAP_PCISOCK)/ $* ;}
 
 #
 # LDIF filters

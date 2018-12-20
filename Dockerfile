@@ -1,4 +1,6 @@
-FROM	alpine
+ARG     REL=latest
+
+FROM	alpine:$REL
 
 LABEL	maintainer=mlan
 

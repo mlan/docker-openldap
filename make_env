@@ -1,4 +1,6 @@
 NS = mlan
+VERSION = 1.0
+ARG = --build-arg REL=3.8
 VOLUMES = 
 PORTS = -p 400:389
 ENV = 

@@ -39,7 +39,7 @@ shell:
 
 wait:
 	sleep 5
-	
+
 exec:
 	docker exec -it $(CONTAINER_NAME)-$(CONTAINER_INSTANCE) $(SHELL)
 

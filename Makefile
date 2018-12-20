@@ -10,9 +10,14 @@ SHELL ?= /bin/sh
 
 SLEEPTIME ?= 9
 
-.PHONY: build build-version build-all dockerfile build-force push shell exec run run-fg start stop rm-container rm-image purge release export copy create  sleep testall testall-all test1 test2 test3 test4 test5 test6 test7 test8 test9
+.PHONY: ps build build-version build-all dockerfile build-force push shell exec logs run run-fg run-force start stop rm-container rm-image purge release export copy create  sleep testall testall-all test1 test2 test3 test4 test5 test6 test7 test8 test9
 
-build: 
+init: export create wait import start
+
+ps:
+	docker ps -a
+
+build:
 	docker build -t $(NS)/$(IMAGE_NAME):$(VERSION) -f Dockerfile .
 
 build-force: stop purge build
@@ -21,8 +26,8 @@ build-version: dockerfile
 	docker build -t $(NS)/$(IMAGE_NAME):$(VERSION) -f $(VERSION)/Dockerfile $(VERSION)/.
 
 build-all: build
-	for ver in 3.6 3.5 3.4; do $(MAKE) build-version -e VERSION=$$ver; done
-	
+	for ver in 3.8 3.7; do $(MAKE) build-version -e VERSION=$$ver; done
+
 dockerfile:
 	mkdir -p $(VERSION)/seed
 	sed -r 's/(FROM\s*alpine)/\1:'"$(VERSION)"'/' Dockerfile >$(VERSION)/Dockerfile
@@ -32,6 +37,9 @@ dockerfile:
 shell:
 	docker run --rm --name $(CONTAINER_NAME)-$(CONTAINER_INSTANCE) -i -t $(PORTS) $(VOLUMES) $(ENV) $(NS)/$(IMAGE_NAME):$(VERSION) $(SHELL)
 
+wait:
+	sleep 5
+	
 exec:
 	docker exec -it $(CONTAINER_NAME)-$(CONTAINER_INSTANCE) $(SHELL)
 
@@ -41,11 +49,20 @@ run-fg:
 run:
 	docker run -d --name $(CONTAINER_NAME)-$(CONTAINER_INSTANCE) $(PORTS) $(VOLUMES) $(ENV) $(NS)/$(IMAGE_NAME):$(VERSION)
 
+run-force:
+	docker run -d --name $(CONTAINER_NAME)-$(CONTAINER_INSTANCE) $(PORTS) $(VOLUMES) $(ENV) $(NS)/$(IMAGE_NAME):$(VERSION) while true; do sleep 86400; done
+
 start:
 	docker start $(CONTAINER_NAME)-$(CONTAINER_INSTANCE)
 
 stop:
 	docker stop $(CONTAINER_NAME)-$(CONTAINER_INSTANCE)
+
+logs:
+	docker container logs $(CONTAINER_NAME)-$(CONTAINER_INSTANCE)
+
+diff:
+	docker container diff $(CONTAINER_NAME)-$(CONTAINER_INSTANCE)
 
 rm-container:
 	docker rm $(CONTAINER_NAME)-$(CONTAINER_INSTANCE)
@@ -54,13 +71,14 @@ rm-image:
 	docker image rm $(NS)/$(IMAGE_NAME):$(VERSION)
 
 export:
+	mkdir -p seed/0 seed/1
 	sudo slapcat -n0 -o ldif-wrap=no -l seed/0/config.ldif
 	sudo slapcat -n1 -o ldif-wrap=no -l seed/1/users.ldif
 
 create:
 	docker create --name $(CONTAINER_NAME)-$(CONTAINER_INSTANCE) $(PORTS) $(VOLUMES) $(ENV) $(NS)/$(IMAGE_NAME):$(VERSION)
 
-copy:
+import:
 	docker cp seed $(CONTAINER_NAME)-$(CONTAINER_INSTANCE):/var/lib/openldap/
 
 purge: rm-container rm-image
@@ -73,10 +91,10 @@ release: build
 
 default: build
 
-testall: test1 test2 test3 test4 test5 test6 test7 test8 test9 
+testall: test1 test2 test3 test4 test5 test6 test7 test8 test9
 
 testall-all: testall
-	for ver in 3.6 3.5 3.4; do $(MAKE) testall -e VERSION=$$ver; done	
+	for ver in 3.8 3.7; do $(MAKE) testall -e VERSION=$$ver; done
 
 test1:
 	# test1: default config, no seeds

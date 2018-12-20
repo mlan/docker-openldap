@@ -15,7 +15,8 @@ olcPidFile: /var/run/openldap/slapd.pid
 dn: cn=module,cn=config
 objectClass: olcModuleList
 cn: module
-olcModulepath:	/usr/lib/openldap
+olcModulepath: /usr/lib/openldap
+olcModuleLoad: back_mdb
 olcModuleLoad: memberof
 olcModuleLoad: refint
 

@@ -1,5 +1,0 @@
-#### Default `.ldif` file directory
- 
-Default `.ldif` files are kept in the `LDAP_SEEDDIRa` directory. This directory is NOT scanned at container start up, but if the `LDAP_SEEDDIR0` is empty, files with names matching `LDAP_SEEDDIRa/0*` will be moved to `LDAP_SEEDDIR0` and applied. And similarly if the `LDAP_SEEDDIR1` is empty, files with names matching `LDAP_SEEDDIRa/1*` will be moved to `LDAP_SEEDDIR1` and applied.
-
-

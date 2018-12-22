@@ -101,14 +101,16 @@ add0() {
 	$cmd 2>&1
 }
 
-add1() {
-	# either call using add1 file.ldap or add1 -f ldap.filt file.ldap
+add() {
+	# either call using add file.ldap or add -f ldap.filt file.ldap
 	[ "$1" = "-f" ] && $2 "$3" && shift 2
 	ldapmodify $(_isadd "$1") -Y EXTERNAL -H ldapi://$(_escurl $LDAP_PCISOCK)/ -f "$1" 2>&1
 }
 
 search() { ldapsearch -Y EXTERNAL -H ldapi://$(_escurl $LDAP_PCISOCK)/ $* ;}
 modify() { ldapmodify -Y EXTERNAL -H ldapi://$(_escurl $LDAP_PCISOCK)/ $* ;}
+whoami() { ldapwhoami -Y EXTERNAL -H ldapi://$(_escurl $LDAP_PCISOCK)/ $* ;}
+delete() { ldapdelete -Y EXTERNAL -H ldapi://$(_escurl $LDAP_PCISOCK)/ $* ;}
 
 #
 # LDIF filters
@@ -293,7 +295,7 @@ ldap_add1() {
 	for file in $files ; do
 		case "$file" in
 		*.sh)   inform 0 "Sourcing database file $file"; . "$file" ;;
-		*.ldif) inform 0 "Applying database file $file"; add1 -f "ldif_users" "$file" ;;
+		*.ldif) inform 0 "Applying database file $file"; add -f "ldif_users" "$file" ;;
 		esac
 	done
 }

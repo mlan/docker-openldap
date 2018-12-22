@@ -48,7 +48,7 @@ COPY	seed/a/* $LDAP_SEEDDIRa/
 
 RUN	chown -R $LDAP_USER: ${LDAP_SEEDDIRa%/*}
 
-HEALTHCHECK CMD ldapwhoami -xH ldapi:// || exit 1
+HEALTHCHECK CMD ldap whoami || exit 1
 
 ENTRYPOINT ["entrypoint.sh"]
 

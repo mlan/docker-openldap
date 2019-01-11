@@ -372,16 +372,16 @@ start_cmd() {
 define_formats
 
 #
-# Limiting the open file descriptors prevent excessive memory consumption by slapd
-#
-
-ulimit -n 8192
-
-#
 # Allow interactive mode
 #
 
 interactive $@
+
+#
+# Limiting the open file descriptors prevent excessive memory consumption by slapd
+#
+
+ulimit -n 8192
 
 #
 # Potentially change $LDAP_USER uid and gid

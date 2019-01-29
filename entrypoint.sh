@@ -251,7 +251,7 @@ ldap_chk0() {
 }
 
 ldap_chk1() {
-	# test data. if nu data found, use seeds
+	# test data. if no data found, use seeds
 	if [ -n "$(pidof slapd)" ]; then
 		local data_str="$(slapcat -a '(o=*)' | head -n1)"
 		if [ -n "$data_str" ]; then

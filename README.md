@@ -1,17 +1,29 @@
 
 # What is an OpenLDAP server?
 
-The [OpenLDAP](https://www.openldap.org/) server is an open source
-implementation of the Lightweight Directory Access Protocol used to provide
-network authentication.
+The [OpenLDAP](https://www.openldap.org/) server is an open source implementation of the Lightweight Directory Access Protocol used to provide network authentication.
 
-# What is does this image do?
+# What does this image do?
 
 ![docker build](https://img.shields.io/docker/build/mlan/openldap.svg) ![travis build](https://api.travis-ci.org/mlan/docker-openldap.svg?branch=master) ![image size](https://images.microbadger.com/badges/image/mlan/openldap.svg) ![docker stars](https://img.shields.io/docker/stars/mlan/openldap.svg) ![docker pulls](https://img.shields.io/docker/pulls/mlan/openldap.svg)
 
-This (non official) Docker image contains an [Alpine Linux](https://alpinelinux.org/) based [OpenLDAP](https://www.openldap.org/) Server. The LDAP server is accessible on port 389 using the `ldap://` protocol. The image is designed too to have a small footprint, about 10 MB, and therefore packages needed for secure transfer are _not_ included in this image.
+This (non official) Docker image contains an [Alpine Linux](https://alpinelinux.org/) based [OpenLDAP](https://www.openldap.org/) Server. The LDAP server is accessible on port 389 using the `ldap://` protocol as well as on a UNIX socket `ldapi://` within the container. The image is designed too to have a small footprint, about 10 MB, and therefore packages needed for secure transfer are _not_ included in this image.
 
 The OpenLDAP Server typically holds user login credentials, postal and e-mail addresses and similar pieces of information. This image help integrate an OpenLDAP server with other dockerized services.
+
+## What can this image do?
+
+Brief feature list follows below
+
+- Initialization (seeding) using raw `slapcat` generated `.ldap` files
+- Initialization (seeding) using environment variables
+- Log directed to docker daemon with configurable level
+- Accepts read only (RO) mounted database file systems
+- Built in utility script `ldap` helping managing the databases
+- Built in `.ldap` filters helping initiating and managing the databases
+- Unix domain (IPC) socket support
+- Configurable database paths, helping host volume magement
+- Configurable run-as-user `uid` and `gid` 
 
 # How to use this image
 
@@ -87,6 +99,30 @@ $ docker run -d -p 389:389 mlan/openldap
 ```
 Now you can [test that it works](#test-your-openldap-server)
 
+## Docker Compose example
+
+An example of how to start an OpenLDAP server with already initiated (seeded) database using docker compose is given below:
+
+```yaml
+version: '3.7'
+services:
+  auth:
+    image: mlan/openldap:1.0
+    restart: unless-stopped
+    networks:
+      - backend
+    environment:
+      - LDAP_LOGLEVEL=parse
+    volumes:
+      - auth-conf:/srv/conf
+      - auth-data:/srv/data
+networks:
+  backend:
+volumes:
+  auth-conf:
+  auth-data:
+```
+
 
 ## Test your OpenLDAP server
 
@@ -157,43 +193,44 @@ This leaves the users database completely empty, should this be desired.
 
 #### `LDAP_LOGLEVEL`
 This is an optional variable, set to `2048` by default. `LDAP_LOGLEVEL` can be 
-set to either the loglevel number, its hex-value, or its log-name. For example 
+set to either the log level number, its hex-value, or its log-name. For example 
 setting `LDAP_LOGLEVEL` to `2048`, `0x800` or `parse` is equivalent. See 
 [The slapd Configuration File](https://www.openldap.org/doc/admin24/slapdconfig.html)
 for more details. Set to empty to allow the `olcLogLevel` database parameter to
-take precedence. 
+take precedence. Example usage: `LDAP_LOGLEVEL=parse`
 
 #### `LDAP_UIDGID`
 This is an optional variable, undefined by default, which when set allows 
 modifying the `uid` and `gid` of the ldap user running `slapd` inside the 
-container. Example usage: `LDAP_UIDGID=120:127` will set the ldap user `uid` to
+container. Example usage: `LDAP_UIDGID=120:127` will set the run-as-user, named `LDAP_USER`,  user `uid` to
 120 and its `gid` to 127. This can be useful when bind mounting volumes and 
 you want a non root user be able to access the databases themselves.
 
+#### `LDAP_USER`
+
+This is an optional variable, set to `ldap` by default. This is the name of the run-as-user within the container. Example usage: `LDAP_USER=ldap`
+
 #### `LDAP_CONFVOL`
 This is an optional variable, set to `/srv/conf` by default, which when set can
-be used to change the path to the config database within the container.
+be used to change the path to the config database within the container. Example usage: `LDAP_CONFVOL=/srv/conf`
 
 #### `LDAP_DATAVOL`
 This is an optional variable, set to `/srv/data` by default, which when set can
-be used to change the path to the user database within the container.
+be used to change the path to the users database within the container. Example usage: `LDAP_DATAVOL=/srv/data`
 
 #### `LDAP_CONFDIR`
-This is an optional variable, set to `/etc/openldap/slapd.d` by default, which 
-shuld correspond to the distributiond expected path to the config database, 
-which here is repalced by the symlink pointing to it.
+This is an optional variable, set to `/etc/openldap/slapd.d` by default, which should correspond to the distributions expected path to the config database, 
+which here is replaced by the symbolic link pointing to it.
 
 #### `LDAP_DATADIR`
 This is an optional variable, set to `/var/lib/openldap/openldap-data` by 
-default, which shuld correspond to the distributiond expected path to the user
-database, which here is repalced by the symlink pointing to it.
+default, which should correspond to the distributions expected path to the users database, which here is replaced by the symbolic link pointing to it.
 
-#### `LDAP_COPYROOT`
-This is an optional variable, set to `/tmp` by default. This root path is used
-to determine the paths where copies `LDAP_CONFVOL` and `LDAP_DATAVOL` are 
-placed if they are mounted read only. If you which to disable this feature set
-this varable to empty, that is `LDAP_COPYROOT=`
- 
+#### `LDAP_RWCOPYDIR`
+This is an optional variable, set to `/tmp` by default. This directory path is used
+to determine the paths where copies `LDAP_CONFVOL` and `LDAP_DATAVOL` are placed if they are mounted read only. If you wish to disable this feature set
+this variable to empty, that is `LDAP_RWCOPYDIR=`
+
 #### `LDAP_MODULEDIR`
 This is an optional variable, set to `/usr/lib/openldap` by default, which when
 set can be used to change the path to the openldap modules. 
@@ -214,26 +251,27 @@ This is an optional variable, set to `/var/lib/openldap/seed/1` by default, whic
 
 This is an optional variable, set to `/var/lib/openldap/seed/a` by default, which when set can be used to change the location where OpenLDAP finds default seeding files, which are used when no files can be found in the `LDAP_SEEDDIR0` or `LDAP_SEEDDIR1` directories, during database seeding.
 
-## Where to store data
+## Where to store persistent data
 
 By default docker will store the databases within the container. This has the 
 drawback that the databases are deleted thogeter with the container if it is
 deleted. The path to the configuration and data databases within the contatner
-are `/srv/conf` and `/srv/data` respectively. 
+are `LDAP_CONFVOL=/srv/conf` and `LDAP_DATAVOL=/srv/data` respectively. 
 Often it is useful to create a data directory on the host system 
 (outside the container) and mount this to a directory visible from inside 
 the container. This places the database files in a known location on the 
 host system, and makes it easy for tools and applications on the host 
 system to access the files.
 
-To have persistent storage, you can start the openldap container like this, where we also set the `uid` and `gid` of the user running `slapd` inside the container:
+To have persistent storage, you can start the OpenLDAP container like this:
 ```bash
-$ docker run -d --name openldap -p 389:389 \
-  -v "$(pwd)"/seed:/var/lib/openldap/seed \
+$ docker run -d --name auth -p 389:389 \
   -v auth-conf:/srv/conf \
   -v auth-data:/srv/data \
   mlan/openldap
 ```
+
+Alternatively you can start an OpenLDAP server with persistent data using docker-compose see the [docker compose example](#docker-compose-example).
 
 # Implementation details
 

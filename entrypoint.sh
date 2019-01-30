@@ -13,7 +13,7 @@
 LDAP_CONFDIR=${LDAP_CONFDIR-/etc/openldap/slapd.d}
 LDAP_DATADIR=${LDAP_DATADIR-/var/lib/openldap/openldap-data}
 LDAP_RUNDIR=${LDAP_RUNDIR-/var/run/openldap}
-LDAP_PCISOCK=${LDAP_PCISOCK-$LDAP_RUNDIR/ldapi}
+LDAP_IPCSOCK=${LDAP_IPCSOCK-$LDAP_RUNDIR/ldapi}
 LDAP_MODULEDIR=${LDAP_MODULEDIR-/usr/lib/openldap}
 LDAP_SEEDDIRa=${LDAP_SEEDDIRa-/var/lib/openldap/seed/a}
 LDAP_SEEDDIR0=${LDAP_SEEDDIR0-/var/lib/openldap/seed/0}
@@ -22,7 +22,7 @@ LDAP_ROOTCN=${LDAP_ROOTCN-admin}
 LDAP_LOGLEVEL=${LDAP_LOGLEVEL-2048}
 LDAP_CONFVOL=${LDAP_CONFVOL-/srv/conf}
 LDAP_DATAVOL=${LDAP_DATAVOL-/srv/data}
-LDAP_COPYROOT=${LDAP_COPYROOT-/tmp}
+LDAP_RWCOPYDIR=${LDAP_RWCOPYDIR-/tmp}
 LDAP_USER=${LDAP_USER-ldap}
 VERBOSE=
 
@@ -91,7 +91,20 @@ _dc() { echo "$1" | sed 's/\./,dc=/g' ;}
 _isadd() { [ -z "$(sed '1,1000!d;/changetype: /!d;q' $1)" ] && echo "-a" ;}
 _findseed() { find "$1" -type f -iname '*.ldif' -o -iname '*.sh' | sort ;}
 _arg() { [[ -n "$2" ]] && echo "$1 $2" ;}
-_howmnt() { sed -nr 's/[^ ]+ '"$(_escdiv $1)"' [^ ]+ ([^,]+).*/\1/p' /proc/mounts ;}
+#_howmnt() { sed -nr 's/[^ ]+ '"$(_escdiv $1)"' [^ ]+ ([^,]+).*/\1/p' /proc/mounts ;}
+
+_howmnt() {
+	# search if arg is mentioned in /proc/mounts and return its mount options
+	# if arg is not mentioned try its parent directory
+	# make sure arg is absolute path
+	local dir=/${1#/}
+	local mntopt=
+	while [ -n "$dir" -a -z "$mntopt" ]; do
+		mntopt=$(sed -nr 's/[^ ]+ '"$(_escdiv $dir)"' [^ ]+ ([^,]+).*/\1/p' /proc/mounts)
+		dir=${dir%/*}
+	done
+	echo "$mntopt"
+}
 
 add0() {
 	# either call using add0 file.ldap or add0 -f ldap.filt file.ldap
@@ -104,13 +117,13 @@ add0() {
 add() {
 	# either call using add file.ldap or add -f ldap.filt file.ldap
 	[ "$1" = "-f" ] && $2 "$3" && shift 2
-	ldapmodify $(_isadd "$1") -Y EXTERNAL -H ldapi://$(_escurl $LDAP_PCISOCK)/ -f "$1" 2>&1
+	ldapmodify $(_isadd "$1") -Y EXTERNAL -H ldapi://$(_escurl $LDAP_IPCSOCK)/ -f "$1" 2>&1
 }
 
-search() { ldapsearch -Y EXTERNAL -H ldapi://$(_escurl $LDAP_PCISOCK)/ $* ;}
-modify() { ldapmodify -Y EXTERNAL -H ldapi://$(_escurl $LDAP_PCISOCK)/ $* ;}
-whoami() { ldapwhoami -Y EXTERNAL -H ldapi://$(_escurl $LDAP_PCISOCK)/ $* ;}
-delete() { ldapdelete -Y EXTERNAL -H ldapi://$(_escurl $LDAP_PCISOCK)/ $* ;}
+search() { ldapsearch -Y EXTERNAL -H ldapi://$(_escurl $LDAP_IPCSOCK)/ $* ;}
+modify() { ldapmodify -Y EXTERNAL -H ldapi://$(_escurl $LDAP_IPCSOCK)/ $* ;}
+whoami() { ldapwhoami -Y EXTERNAL -H ldapi://$(_escurl $LDAP_IPCSOCK)/ $* ;}
+delete() { ldapdelete -Y EXTERNAL -H ldapi://$(_escurl $LDAP_IPCSOCK)/ $* ;}
 
 #
 # LDIF filters
@@ -202,7 +215,7 @@ ldap_copyifro() {
 	# make a rw copy if directory is mounted ro
 	local voldir=${1-$LDAP_CONFVOL}
 	local link=${2-$LDAP_CONFDIR}
-	local tmproot=${3-$LDAP_COPYROOT}
+	local tmproot=${3-$LDAP_RWCOPYDIR}
 	if [ "$(_howmnt $voldir)" == "ro" ]; then
 		if [ -n "$tmproot" ]; then
 			local newdir=${tmproot}/${voldir##*/}
@@ -344,7 +357,7 @@ start() {
 	local cmd
 	if [ -z "$(pidof slapd)" ]; then
 		if [[ $# -eq 0 ]] ; then
-			cmd="slapd $(_arg -d $LDAP_LOGLEVEL) -u $LDAP_USER -g $LDAP_USER -h \"ldap:/// ldapi://$(_escurl $LDAP_PCISOCK)/\" $(_arg -F $LDAP_CONFDIR)"
+			cmd="slapd $(_arg -d $LDAP_LOGLEVEL) -u $LDAP_USER -g $LDAP_USER -h \"ldap:/// ldapi://$(_escurl $LDAP_IPCSOCK)/\" $(_arg -F $LDAP_CONFDIR)"
 		else
 			cmd="$@"
 		fi
@@ -359,7 +372,7 @@ start_cmd() {
 	# try to start slapd if it not running
 	# if user provided any argument assume they are the desired start command
 	if [[ $# -eq 0 ]] ; then
-		echo "slapd $(_arg -d $LDAP_LOGLEVEL) -u $LDAP_USER -g $LDAP_USER -h \"ldap:/// ldapi://$(_escurl $LDAP_PCISOCK)/\" $(_arg -F $LDAP_CONFDIR)"
+		echo "slapd $(_arg -d $LDAP_LOGLEVEL) -u $LDAP_USER -g $LDAP_USER -h \"ldap:/// ldapi://$(_escurl $LDAP_IPCSOCK)/\" $(_arg -F $LDAP_CONFDIR)"
 	else
 		echo "$@"
 	fi
@@ -420,7 +433,7 @@ if [ -z "$(pidof slapd)" ]; then
 	inform 0 "Starting ldap using: $(start_cmd $@)"
 #	exec $(start_cmd $@)
 #	while true; do sleep 86400; done
-	exec slapd $(_arg -d $LDAP_LOGLEVEL) -u $LDAP_USER -g $LDAP_USER -h "ldap:/// ldapi://$(_escurl $LDAP_PCISOCK)/" $(_arg -F $LDAP_CONFDIR)
+	exec slapd $(_arg -d $LDAP_LOGLEVEL) -u $LDAP_USER -g $LDAP_USER -h "ldap:/// ldapi://$(_escurl $LDAP_IPCSOCK)/" $(_arg -F $LDAP_CONFDIR)
 ##	exec slapd -u $LDAP_USER -g $LDAP_USER -h "ldap:///" -F /etc/openldap/slapd.d
 else
 	inform 1 "slapd already running"

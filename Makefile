@@ -97,33 +97,40 @@ testall-all: testall
 	for ver in 3.8 3.7; do $(MAKE) testall -e VERSION=$$ver; done
 
 test1:
-	# test1: default config, no seeds
+	# test1: default config, no seeds, ldap and ldapi
 	docker run -d --rm --name openldap_1 -p 401:389 \
 	$(NS)/$(IMAGE_NAME):$(VERSION)
 	sleep $(SLEEPTIME)
 	ldapsearch -H ldap://:401 -xLLL -b "dc=example,dc=com" "o=*" \
 	| grep 'dn: dc=example,dc=com'
+	docker exec -it openldap_1 ldap search -b "dc=example,dc=com" "o=*" \
+	| grep 'dn: dc=example,dc=com'
 	docker stop openldap_1
 
 test2:
 	# test2: DOMAIN ROOTCN ROOTPW UIDGID repeating default config, no seeds
-	docker run -d --name openldap_2 -p 402:389 \
+	# test2: read only volume mount
+	docker run -d --name openldap_2 -p 402:389 -v openldap_2:/srv \
 	-e LDAP_DOMAIN=example.com \
 	-e LDAP_ROOTCN=admin \
 	-e LDAP_ROOTPW={SSHA}KirjzsjgMvjqBWNNof7ujKhwAZBfXmw3 \
-	-e LDAP_UIDGID=1000 \
+	-e LDAP_UIDGID=1001 \
 	$(NS)/$(IMAGE_NAME):$(VERSION)
 	sleep $(SLEEPTIME)
 	docker stop openldap_2
 	docker start openldap_2
 	docker stop openldap_2
-	docker start openldap_2
+	docker rm openldap_2
+	docker run -d --name openldap_2 -p 402:389 -v openldap_2:/srv:ro \
+	-e LDAP_UIDGID=1002 \
+	$(NS)/$(IMAGE_NAME):$(VERSION)
 	sleep $(SLEEPTIME)
-	docker exec -it openldap_2 ls -lna /var/lib/openldap/ /var/lib/openldap/openldap-data
+	docker exec -it openldap_2 ls -lna /tmp/conf /tmp/data
 	ldapsearch -H ldap://:402 -xLLL -b "dc=example,dc=com" "o=*" \
 	| grep 'dn: dc=example,dc=com'
 	docker stop openldap_2
 	docker rm openldap_2
+	docker volume rm openldap_2
 
 test3:
 	# test3: DOMAIN ROOTCN ROOTPW, no seeds

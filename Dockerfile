@@ -1,7 +1,7 @@
-ARG     REL=latest
+ARG	DIST=alpine
+ARG	REL=latest
 
-FROM	alpine:$REL
-
+FROM	$DIST:$REL
 LABEL	maintainer=mlan
 
 # Install OpenLDAP

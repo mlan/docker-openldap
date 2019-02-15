@@ -1,17 +1,17 @@
 
-# What is an OpenLDAP server?
+# OpenLDAP
 
 The [OpenLDAP](https://www.openldap.org/) server is an open source implementation of the Lightweight Directory Access Protocol used to provide network authentication.
 
-# What does this image do?
+# The `mlan/openldap` repository
 
 ![docker build](https://img.shields.io/docker/build/mlan/openldap.svg) ![travis build](https://api.travis-ci.org/mlan/docker-openldap.svg?branch=master) ![image size](https://images.microbadger.com/badges/image/mlan/openldap.svg) ![docker stars](https://img.shields.io/docker/stars/mlan/openldap.svg) ![docker pulls](https://img.shields.io/docker/pulls/mlan/openldap.svg)
 
-This (non official) Docker image contains an [Alpine Linux](https://alpinelinux.org/) based [OpenLDAP](https://www.openldap.org/) Server. The LDAP server is accessible on port 389 using the `ldap://` protocol as well as on a UNIX socket `ldapi://` within the container. The image is designed too to have a small footprint, about 10 MB, and therefore packages needed for secure transfer are _not_ included in this image.
+This (non official) Docker image contains an [Alpine Linux](https://alpinelinux.org/) based [OpenLDAP](https://www.openldap.org/) Server. The LDAP server is accessible on port 389 using the `ldap://` protocol as well as on a UNIX socket `ldapi://` within the container. The image is designed to have a small footprint, about 10 MB, and therefore packages needed for secure transfer are _not_ included in this image.
 
 The OpenLDAP Server typically holds user login credentials, postal and e-mail addresses and similar pieces of information. This image help integrate an OpenLDAP server with other dockerized services.
 
-## What can this image do?
+## Features
 
 Brief feature list follows below
 
@@ -22,10 +22,16 @@ Brief feature list follows below
 - Built in utility script `ldap` helping managing the databases
 - Built in `.ldap` filters helping initiating and managing the databases
 - Unix domain (IPC) socket support
-- Configurable database paths, helping host volume magement
+- Configurable database paths, helping host volume management
 - Configurable run-as-user `uid` and `gid` 
 
-# How to use this image
+## Tags
+
+The breaking.feature.fix [semantic versioning](https://semver.org/) used. In addition  to the three number version number you can use two or one number versions numbers, which refers to the latest version of the sub series. The tag `latest` references the build based  on the latest commit to the repository.
+
+To exemplify the usage of version tags, lets assume that the latest version is `1.2.3`. In this case,  `1.2.3`, `1.2` and `1` all identify the same image.
+
+# Usage
 
 The OpenLDAP config and users databases are created when the container is run
 for the first time. They are then either created to an empty state using
@@ -44,22 +50,22 @@ This use case relies on that config and users data are available in an preexisti
 #### Export source server config and users databases into `.ldif` files
 
 ```bash
-$ sudo slapcat -n0 -o ldif-wrap=no -l seed/0/config.ldif
-$ sudo slapcat -n1 -o ldif-wrap=no -l seed/1/users.ldif
+sudo slapcat -n0 -o ldif-wrap=no -l seed/0/config.ldif
+sudo slapcat -n1 -o ldif-wrap=no -l seed/1/users.ldif
 ```
 
 #### Make `.ldif` files available to the container and run it
 
 _either_ by mounting the host directory the files reside in
 ```bash
-$ docker run -d --name openldap -p 389:389 \ 
+docker run -d --name openldap -p 389:389 \ 
   -v "$(pwd)"/seed:/var/lib/openldap/seed mlan/openldap
 ```
 _or_ by first copying the host directory to the container
 ```bash
-$ docker create --name openldap -p 389:389 mlan/openldap
-$ docker cp seed openldap:/var/lib/openldap/
-$ docker start openldap
+docker create --name openldap -p 389:389 mlan/openldap
+docker cp seed openldap:/var/lib/openldap/
+docker start openldap
 ```
 Now you can [test that it works](#test-your-openldap-server)
 
@@ -73,7 +79,7 @@ This will create an OpenLDAP server with an users database that only contain an 
 
 #### Run container
 ```bash
-$ docker run -d --name openldap -p 389:389 \
+docker run -d --name openldap -p 389:389 \
   -e LDAP_DOMAIN=example.com \
   -e LDAP_ROOTCN=admin \
   -e LDAP_ROOTPW={SSHA}KirjzsjgMvjqBWNNof7ujKhwAZBfXmw3 \
@@ -83,8 +89,8 @@ $ docker run -d --name openldap -p 389:389 \
 #### Optional: Load user data
 Generate, for example, by using a text editor, a LDIF file, with you user data. Bind to the OpenLDAP server using the `ldapadd` command and the rootdn user credentials. Here we illustrate this procedure by using a file, containing a users sample, that comes with this repository. 
 ```bash
-$ ldapadd -H ldap://:389 -x -D "cn=admin,dc=example,dc=com" -W -f seed/b/190-users.ldif
-> Enter LDAP Password:
+ldapadd -H ldap://:389 -x -D "cn=admin,dc=example,dc=com" -W -f seed/b/190-users.ldif
+Enter LDAP Password:
 ```
 Now you can [test that it works](#test-your-openldap-server)
 
@@ -95,7 +101,7 @@ The default domain is `example.com`, the default rootdn is `cn=admin,dc=example,
 
 #### Run container
 ```bash
-$ docker run -d -p 389:389 mlan/openldap
+docker run -d -p 389:389 mlan/openldap
 ```
 Now you can [test that it works](#test-your-openldap-server)
 
@@ -107,7 +113,7 @@ An example of how to start an OpenLDAP server with already initiated (seeded) da
 version: '3.7'
 services:
   auth:
-    image: mlan/openldap:1.0
+    image: mlan/openldap:1
     restart: unless-stopped
     networks:
       - backend
@@ -128,33 +134,37 @@ volumes:
 
 #### Anonymous authentication
 ```bash
-$ ldapwhoami -H ldap://:389 -x
-> anonymous
+ldapwhoami -H ldap://:389 -x
+
+anonymous
 ```
 
 #### Server "domain"
 ```bash
-$ ldapsearch -H ldap://:389 -xLLL -s base namingContexts
-> dn:
-> namingContexts: dc=example,dc=com
+ldapsearch -H ldap://:389 -xLLL -s base namingContexts
+
+dn:
+namingContexts: dc=example,dc=com
 ```
 
 #### Domain component
 ```bash
-$ ldapsearch -H ldap://:389 -xLLL -b 'dc=example,dc=com' 'o=*'
-> dn: dc=example,dc=com
-> dc: example
-> objectClass: dcObject
-> objectClass: organization
-> o: example.com
+ldapsearch -H ldap://:389 -xLLL -b 'dc=example,dc=com' 'o=*'
+
+dn: dc=example,dc=com
+dc: example
+objectClass: dcObject
+objectClass: organization
+o: example.com
 ```
 
 #### User email address
 
 ```bash
-$ ldapsearch -H ldap://:389 -xLLL -b "dc=example,dc=com" '(&(objectclass=person)(cn=Harm Coddington))' mail
-> dn: cn=Harm Coddington,ou=Janitorial,dc=example,dc=com
-> mail: CoddingH@ns-mail6.com
+ldapsearch -H ldap://:389 -xLLL -b "dc=example,dc=com" '(&(objectclass=person)(cn=Harm Coddington))' mail
+
+dn: cn=Harm Coddington,ou=Janitorial,dc=example,dc=com
+mail: CoddingH@ns-mail6.com
 ```
 
 ## Environment variables
@@ -265,7 +275,7 @@ system to access the files.
 
 To have persistent storage, you can start the OpenLDAP container like this:
 ```bash
-$ docker run -d --name auth -p 389:389 \
+docker run -d --name auth -p 389:389 \
   -v auth-conf:/srv/conf \
   -v auth-data:/srv/data \
   mlan/openldap
@@ -291,8 +301,8 @@ Many OpenLDAP servers are configured in a way allowing assess to the config and 
 
 Both config and users databases can normally be managed by connection to the LDAP server by using its file socket, ldapi:// and authenticate by EXTERNAL means by being the container root user (uid=0,gid=0).
 ```bash
-$ docker cp seed/b/190-users.ldif openldap:/tmp/190-users.ldif
-$ docker exec -it openldap ldapadd -Y EXTERNAL -H ldapi:/// -f /tmp/190-users.ldif
+docker cp seed/b/190-users.ldif openldap:/tmp/190-users.ldif
+docker exec -it openldap ldapadd -Y EXTERNAL -H ldapi:/// -f /tmp/190-users.ldif
 ```
 
 You can also use [the `ldap` utility](#the-ldap-utility) to access the LDAP server using its socket.
@@ -301,8 +311,9 @@ You can also use [the `ldap` utility](#the-ldap-utility) to access the LDAP serv
 
 The users database can normally be managed by connection to the LDAP server by using its tcp port, `ldap://` and use simple authentication by using the credentials of the rootdn user 
 ```bash
-$ ldapadd -H ldap:// -x -D "cn=admin,dc=example,dc=com" -W -f seed/b/190-users.ldif
-> Enter LDAP Password:
+ldapadd -H ldap:// -x -D "cn=admin,dc=example,dc=com" -W -f seed/b/190-users.ldif
+
+Enter LDAP Password:
 ```
 ## Seeding
 
@@ -383,11 +394,11 @@ The command `ldap <cmd> <args>` can be issued on command line from within the co
 To illustrate; the `ldap` utility can be used to reapply the LDIF filters, that was used during seeding, to new `.ldif` files.
 
 ```bash
-$ docker cp seed/b openldap:/var/lib/openldap/seed/
-$ docker exec -it openldap ldap add -f 'ldif_users' /var/lib/openldap/seed/b/191-user.ldif
+docker cp seed/b openldap:/var/lib/openldap/seed/
+docker exec -it openldap ldap add -f 'ldif_users' /var/lib/openldap/seed/b/191-user.ldif
 ```
 
-# Docker Compose ##
+# Docker Compose #
 A  [`docker-compose.yml`](docker-compose.yml)  example is included in this repository.
 
 # Issues Bugs Suggestions ##

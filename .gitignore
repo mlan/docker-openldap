@@ -1,4 +1,5 @@
-local
+local*
+*private
 seed/0/*
 seed/1/*
 !seed/0/README0.txt

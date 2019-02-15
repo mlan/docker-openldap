@@ -2,14 +2,12 @@
 docker-compose.yml
 ldap
 LICENSE.txt
-make_env
+*.mk
 Makefile
-README.md 
+README.md
 local
 seed/0/*
 seed/1/*
 seed/b
 !seed/0/README0.txt
 !seed/1/README1.txt
-3.*
-

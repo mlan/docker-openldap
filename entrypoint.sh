@@ -1,12 +1,6 @@
 #!/bin/sh -e
 
 #
-# TODO
-# 1) update help
-# 2) explore if seeding can be done better. Now we need to create, copy, start
-#
-
-#
 # Config
 #
 
@@ -37,7 +31,13 @@ help() { echo "
 
 	<cmd> group: ldap user
 	ldap_chid [<uid:gid>]
-	ldap_chown [-R]
+	ldap_fixatr <dir>
+
+	<cmd> group: direct ldapi access to database
+	search <args>
+	modify <args>
+	whoami <args>
+	delete <args>
 
 	<cmd> group: apply ldif
 	add0 [-f <ldif filter>] <ldif file>
@@ -45,7 +45,7 @@ help() { echo "
 
 	<cmd> group: apply ldif in seeding dirs
 	add0_all
-	add_all
+	add1_all
 
 	<cmd> group: ldif filters:
 	ldif_intern	<ldif file>

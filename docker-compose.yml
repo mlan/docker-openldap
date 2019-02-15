@@ -6,7 +6,7 @@ services:
     networks:
       - backend
     ports:
-      - "400:389"
+      - "389:389"
     volumes:
       - ./seed:/var/lib/openldap/seed
 
@@ -15,17 +15,25 @@ services:
     networks:
       - backend
     ports:
-      - "401:389"
+      - "389:389"
     environment:
       - LDAP_DOMAIN=example.com
       - LDAP_ROOTCN=admin
       - LDAP_ROOTPW={SSHA}KirjzsjgMvjqBWNNof7ujKhwAZBfXmw3
 
-#      - ldap-config:/etc/openldap/slapd.d
-#      - ldap-users:/var/lib/openldap/openldap-data
-#volumes:
-#  ldap-config:
-#  ldap-users:
+  ldap-persist:
+    image: mlan/openldap
+    networks:
+      - backend
+    environment:
+      - LDAP_LOGLEVEL=parse
+    volumes:
+      - ldap-conf:/srv/conf
+      - ldap-data:/srv/data
+
+volumes:
+  ldap-conf:
+  ldap-data:
 
 networks:
   backend:

@@ -7,7 +7,7 @@ IMG_VER  ?= latest
 IMG_CMD  ?= /bin/sh
 
 TST_PORT ?= 389
-CNT_NAME ?= postfix-amavis-default
+CNT_NAME ?= openldap-default
 CNT_PORT ?= -p $(TST_PORT):389
 CNT_ENV  ?=
 CNT_VOL  ?=

@@ -23,13 +23,13 @@ Brief feature list follows below
 - Built in `.ldap` filters helping initiating and managing the databases
 - Unix domain (IPC) socket support
 - Configurable database paths, helping host volume management
-- Configurable run-as-user `uid` and `gid` 
+- Configurable run-as-user `uid` and `gid`
 
 ## Tags
 
-The breaking.feature.fix [semantic versioning](https://semver.org/) used. In addition  to the three number version number you can use two or one number versions numbers, which refers to the latest version of the sub series. The tag `latest` references the build based  on the latest commit to the repository.
+The breaking.feature.fix [semantic versioning](https://semver.org/) used. In addition to the three number version number you can use two or one number versions numbers, which refers to the latest version of the sub series. The tag `latest` references the build based on the latest commit to the repository.
 
-To exemplify the usage of version tags, lets assume that the latest version is `1.2.3`. In this case,  `1.2.3`, `1.2` and `1` all identify the same image.
+To exemplify the usage of version tags, lets assume that the latest version is `1.2.3`. In this case, `1.2.3`, `1.2` and `1` all identify the same image.
 
 # Usage
 
@@ -41,7 +41,7 @@ seeded with `.ldif` files made available to the container before its first run.
 Once the databases have been created, management of the OpenLDAP server is
 possible both from outside the container using `ldap://` network access with
 admin/root user credentials and/or the `ldapi://` socket from within the
-container. 
+container.
 
 ## Migrating an OpenLDAP server by cloning it
 
@@ -71,7 +71,7 @@ Now you can [test that it works](#test-your-openldap-server)
 
 Be aware that when the databases are seeded, the seeding `.ldif` files are __edited in place__ by LDIF filters, see [LDIF filters](#ldif-filters).
 
-If you have your source OpenLDAP server running on the same host as you are running docker containers, you might need to change the port of you container to allow it to start. 
+If you have your source OpenLDAP server running on the same host as you are running docker containers, you might need to change the port of you container to allow it to start.
 
 ## Start an OpenLDAP server instance using custom configuration
 
@@ -87,7 +87,7 @@ docker run -d --name openldap -p 389:389 \
 ```
 
 #### Optional: Load user data
-Generate, for example, by using a text editor, a LDIF file, with you user data. Bind to the OpenLDAP server using the `ldapadd` command and the rootdn user credentials. Here we illustrate this procedure by using a file, containing a users sample, that comes with this repository. 
+Generate, for example, by using a text editor, a LDIF file, with you user data. Bind to the OpenLDAP server using the `ldapadd` command and the rootdn user credentials. Here we illustrate this procedure by using a file, containing a users sample, that comes with this repository.
 ```bash
 ldapadd -H ldap://:389 -x -D "cn=admin,dc=example,dc=com" -W -f seed/b/190-users.ldif
 Enter LDAP Password:
@@ -178,8 +178,8 @@ When you are using seeding files and the domain name defined therein is already 
 
 #### `LDAP_ROOTCN`
 
-This is an optional variable, set to `admin` by default, which allows defining/modifying the root _distinguished name_ in the config database, using this _common name_ as a base. To have any effect both `LDAP_ROOTCN` and `LDAP_DOMAIN` need to be set to non-empty strings. 
-Example usage: `LDAP_DOMAIN=example.com` and `LDAP_ROOTCN=admin` will set/change the the root _distinguished name_ to `cn=admin,dc=example,dc=com`. 
+This is an optional variable, set to `admin` by default, which allows defining/modifying the root _distinguished name_ in the config database, using this _common name_ as a base. To have any effect both `LDAP_ROOTCN` and `LDAP_DOMAIN` need to be set to non-empty strings.
+Example usage: `LDAP_DOMAIN=example.com` and `LDAP_ROOTCN=admin` will set/change the the root _distinguished name_ to `cn=admin,dc=example,dc=com`.
 When you are using seeding files and the common name defined therein is already the desired one you do not need to set this variable.
 
 #### `LDAP_ROOTPW`
@@ -198,7 +198,7 @@ This is an optional variable, undefined by default, which when set to a non-empt
 
 #### `LDAP_DONTADDDCOBJECT`
 
-This is an optional variable, undefined by default, which when set to a non-empty string prevents seeding of the users database with default domain component entry,  `dcObject`, when the `LDAP_SEEDDIR1` is empty during seeding.
+This is an optional variable, undefined by default, which when set to a non-empty string prevents seeding of the users database with default domain component entry, `dcObject`, when the `LDAP_SEEDDIR1` is empty during seeding.
 This leaves the users database completely empty, should this be desired.
 
 #### `LDAP_LOGLEVEL`
@@ -212,7 +212,7 @@ take precedence. Example usage: `LDAP_LOGLEVEL=parse`
 #### `LDAP_UIDGID`
 This is an optional variable, undefined by default, which when set allows 
 modifying the `uid` and `gid` of the ldap user running `slapd` inside the 
-container. Example usage: `LDAP_UIDGID=120:127` will set the run-as-user, named `LDAP_USER`,  user `uid` to
+container. Example usage: `LDAP_UIDGID=120:127` will set the run-as-user, named `LDAP_USER`, user `uid` to
 120 and its `gid` to 127. This can be useful when bind mounting volumes and 
 you want a non root user be able to access the databases themselves.
 
@@ -229,7 +229,7 @@ This is an optional variable, set to `/srv/data` by default, which when set can
 be used to change the path to the users database within the container. Example usage: `LDAP_DATAVOL=/srv/data`
 
 #### `LDAP_CONFDIR`
-This is an optional variable, set to `/etc/openldap/slapd.d` by default, which should correspond to the distributions expected path to the config database, 
+This is an optional variable, set to `/etc/openldap/slapd.d` by default, which should correspond to the distributions expected path to the config database,
 which here is replaced by the symbolic link pointing to it.
 
 #### `LDAP_DATADIR`
@@ -243,11 +243,11 @@ this variable to empty, that is `LDAP_RWCOPYDIR=`
 
 #### `LDAP_MODULEDIR`
 This is an optional variable, set to `/usr/lib/openldap` by default, which when
-set can be used to change the path to the openldap modules. 
+set can be used to change the path to the openldap modules.
 
 #### `LDAP_RUNDIR`
 
-This is an optional variable, set to `/var/run/openldap` by default, which when set can be used to change the path to the OpenLDAP `slapd.pid` and `slapd.args` files. 
+This is an optional variable, set to `/var/run/openldap` by default, which when set can be used to change the path to the OpenLDAP `slapd.pid` and `slapd.args` files.
 
 #### `LDAP_SEEDDIR0`
 
@@ -291,7 +291,7 @@ Here these paths are symlinked to `/srv/conf` and `/srv/data` respectively.
 When the container is started and the directories `/srv/conf` and `/srv/data`
 are mounted read only, they are copied to `/tmp/conf` and `/tmp/data` and the 
 symlinks in `/etc/openldap/slapd.d` and `/var/lib/openldap/openldap-data` are 
-chnaged accordingly. 
+chnaged accordingly.
 
 ## Database access
 
@@ -309,7 +309,7 @@ You can also use [the `ldap` utility](#the-ldap-utility) to access the LDAP serv
 
 #### Use the ldap:// tcp port and simple authentication
 
-The users database can normally be managed by connection to the LDAP server by using its tcp port, `ldap://` and use simple authentication by using the credentials of the rootdn user 
+The users database can normally be managed by connection to the LDAP server by using its tcp port, `ldap://` and use simple authentication by using the credentials of the rootdn user
 ```bash
 ldapadd -H ldap:// -x -D "cn=admin,dc=example,dc=com" -W -f seed/b/190-users.ldif
 
@@ -317,7 +317,7 @@ Enter LDAP Password:
 ```
 ## Seeding
 
-Files in [LDAP  Data  Interchange  Format  (LDIF)](http://www.openldap.org/software/man.cgi?query=ldif&apropos=0&sektion=0&manpath=OpenLDAP+2.4-Release&format=html) can be used to seed the config and/or users databases.
+Files in [LDAP Data Interchange Format (LDIF)](http://www.openldap.org/software/man.cgi?query=ldif&apropos=0&sektion=0&manpath=OpenLDAP+2.4-Release&format=html) can be used to seed the config and/or users databases.
 
 #### Seeding the config database
 
@@ -330,7 +330,7 @@ Files in the `LDAP_SEEDDIR0` directory are ignored when a config database is pre
 
 #### Seeding the users database
 
-Files with names ending with either `.ldif` or `.sh` in the `LDAP_SEEDDIR1` directory  will, in alphabetical order, be applied when the container is run for the first time when there is no users database.
+Files with names ending with either `.ldif` or `.sh` in the `LDAP_SEEDDIR1` directory will, in alphabetical order, be applied when the container is run for the first time when there is no users database.
 The `*.ldif` files will be applied to the database by using `ldapmodify` and `*.sh` files will be sourced.
 
 If no `.ldif` or `.sh` files can be found in the `LDAP_SEEDDIR1` directory during seeding the files matching `LDAP_SEEDDIRa/1*` will be moved here and applied.
@@ -343,7 +343,7 @@ Default `.ldif` files are kept in the `LDAP_SEEDDIRa` directory. This directory 
 
 ## LDIF filters
 
-The LDIF filters are applied on `.ldif` files during seeding. Please be aware that the filters __edit the files in place__. The filters within the collection `ldif_config` are potentially applied to config `.ldif` files in the `LDAP_SEEDDIR0` directory during seeding. For the users `.ldif` files in the `LDAP_SEEDDIR1` directory the filter collection `ldap_users` is applied. Please be aware that the filters are implemented using the powerful  `sed` command, and consequentially can be a bit fragile.
+The LDIF filters are applied on `.ldif` files during seeding. Please be aware that the filters __edit the files in place__. The filters within the collection `ldif_config` are potentially applied to config `.ldif` files in the `LDAP_SEEDDIR0` directory during seeding. For the users `.ldif` files in the `LDAP_SEEDDIR1` directory the filter collection `ldap_users` is applied. Please be aware that the filters are implemented using the powerful `sed` command, and consequentially can be a bit fragile.
 
 #### `ldif_intern`
 
@@ -399,7 +399,7 @@ docker exec -it openldap ldap add -f 'ldif_users' /var/lib/openldap/seed/b/191-u
 ```
 
 # Docker Compose #
-A  [`docker-compose.yml`](docker-compose.yml)  example is included in this repository.
+A [`docker-compose.yml`](docker-compose.yml) example is included in this repository.
 
 # Issues Bugs Suggestions ##
 

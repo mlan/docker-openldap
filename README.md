@@ -5,7 +5,11 @@ The [OpenLDAP](https://www.openldap.org/) server is an open source implementatio
 
 # The `mlan/openldap` repository
 
-![docker build](https://img.shields.io/docker/build/mlan/openldap.svg) ![travis build](https://api.travis-ci.org/mlan/docker-openldap.svg?branch=master) ![image size](https://images.microbadger.com/badges/image/mlan/openldap.svg) ![docker stars](https://img.shields.io/docker/stars/mlan/openldap.svg) ![docker pulls](https://img.shields.io/docker/pulls/mlan/openldap.svg)
+![Travis (.org)](https://img.shields.io/travis/mlan/docker-openldap.svg?label=build&style=popout-square&logo=travis)
+![docker build](https://img.shields.io/docker/build/mlan/openldap.svg?label=build&style=popout-square&logo=docker)
+![MicroBadger Size](https://img.shields.io/microbadger/image-size/mlan/openldap.svg?label=size&style=popout-square&logo=docker)
+![docker stars](https://img.shields.io/docker/stars/mlan/openldap.svg?label=stars&style=popout-square&logo=docker)
+![docker pulls](https://img.shields.io/docker/pulls/mlan/openldap.svg?label=pulls&style=popout-square&logo=docker)
 
 This (non official) Docker image contains an [Alpine Linux](https://alpinelinux.org/) based [OpenLDAP](https://www.openldap.org/) Server. The LDAP server is accessible on port 389 using the `ldap://` protocol as well as on a UNIX socket `ldapi://` within the container. The image is designed to have a small footprint, about 10 MB, and therefore packages needed for secure transfer are _not_ included in this image.
 
@@ -29,7 +33,7 @@ Brief feature list follows below
 
 The breaking.feature.fix [semantic versioning](https://semver.org/) used. In addition to the three number version number you can use two or one number versions numbers, which refers to the latest version of the sub series. The tag `latest` references the build based on the latest commit to the repository.
 
-To exemplify the usage of version tags, lets assume that the latest version is `1.2.3`. In this case, `1.2.3`, `1.2` and `1` all identify the same image.
+To exemplify the usage of version tags, lets assume that the latest version is `1.2.3`. In this case, `1.2.3`, `1.2` and `1` all identify the same image.
 
 # Usage
 
@@ -169,7 +173,7 @@ mail: CoddingH@ns-mail6.com
 
 ## Environment variables
 
-When you start an mlan/openldap instance, you can adjust its configuration by passing one or more environment variables on the `docker run` command line. Once the instance has been run for the first time and the config and users databases has been created these variables will _not_ have any effect. Any existing databases will always be left untouched on container startup.
+When you start an `mlan/openldap` instance, you can adjust its configuration by passing one or more environment variables on the `docker run` command line. Once the instance has been run for the first time and the config and users databases has been created these variables will _not_ have any effect. Any existing databases will always be left untouched on container startup.
 
 #### `LDAP_DOMAIN`
 
@@ -264,7 +268,7 @@ This is an optional variable, set to `/var/lib/openldap/seed/a` by default, whic
 ## Where to store persistent data
 
 By default docker will store the databases within the container. This has the 
-drawback that the databases are deleted thogeter with the container if it is
+drawback that the databases are deleted together with the container if it is
 deleted. The path to the configuration and data databases within the contatner
 are `LDAP_CONFVOL=/srv/conf` and `LDAP_DATAVOL=/srv/data` respectively. 
 Often it is useful to create a data directory on the host system 
@@ -291,7 +295,7 @@ Here these paths are symlinked to `/srv/conf` and `/srv/data` respectively.
 When the container is started and the directories `/srv/conf` and `/srv/data`
 are mounted read only, they are copied to `/tmp/conf` and `/tmp/data` and the 
 symlinks in `/etc/openldap/slapd.d` and `/var/lib/openldap/openldap-data` are 
-chnaged accordingly.
+changed accordingly.
 
 ## Database access
 
@@ -299,7 +303,7 @@ Many OpenLDAP servers are configured in a way allowing assess to the config and 
 
 #### Use the ldapi:// file socket and EXTERNAL authentication
 
-Both config and users databases can normally be managed by connection to the LDAP server by using its file socket, ldapi:// and authenticate by EXTERNAL means by being the container root user (uid=0,gid=0).
+Both config and users databases can normally be managed by connection to the LDAP server by using its file socket, `ldapi://` and authenticate by EXTERNAL means by being the container root user (uid=0,gid=0).
 ```bash
 docker cp seed/b/190-users.ldif openldap:/tmp/190-users.ldif
 docker exec -it openldap ldapadd -Y EXTERNAL -H ldapi:/// -f /tmp/190-users.ldif
@@ -309,7 +313,7 @@ You can also use [the `ldap` utility](#the-ldap-utility) to access the LDAP serv
 
 #### Use the ldap:// tcp port and simple authentication
 
-The users database can normally be managed by connection to the LDAP server by using its tcp port, `ldap://` and use simple authentication by using the credentials of the rootdn user
+The users database can normally be managed by connection to the LDAP server by using its TCP port, `ldap://` and use simple authentication by using the credentials of the rootdn user
 ```bash
 ldapadd -H ldap:// -x -D "cn=admin,dc=example,dc=com" -W -f seed/b/190-users.ldif
 

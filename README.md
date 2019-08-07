@@ -247,7 +247,7 @@ this variable to empty, that is `LDAP_RWCOPYDIR=`
 
 #### `LDAP_MODULEDIR`
 This is an optional variable, set to `/usr/lib/openldap` by default, which when
-set can be used to change the path to the openldap modules.
+set can be used to change the path to the OpenLDAP modules.
 
 #### `LDAP_RUNDIR`
 

@@ -5,9 +5,9 @@ The [OpenLDAP](https://www.openldap.org/) server is an open source implementatio
 
 # The `mlan/openldap` repository
 
-![Travis (.org)](https://img.shields.io/travis/mlan/docker-openldap.svg?label=build&style=popout-square&logo=travis)
+![travis-ci test](https://img.shields.io/travis/mlan/docker-openldap.svg?label=build&style=popout-square&logo=travis)
 ![docker build](https://img.shields.io/docker/build/mlan/openldap.svg?label=build&style=popout-square&logo=docker)
-![MicroBadger Size](https://img.shields.io/microbadger/image-size/mlan/openldap.svg?label=size&style=popout-square&logo=docker)
+![image size](https://img.shields.io/microbadger/image-size/mlan/openldap.svg?label=size&style=popout-square&logo=docker)
 ![docker stars](https://img.shields.io/docker/stars/mlan/openldap.svg?label=stars&style=popout-square&logo=docker)
 ![docker pulls](https://img.shields.io/docker/pulls/mlan/openldap.svg?label=pulls&style=popout-square&logo=docker)
 

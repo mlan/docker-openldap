@@ -1,6 +1,6 @@
 -include    *.mk
 
-BLD_ARG  ?= --build-arg DIST=alpine --build-arg REL=3.9
+BLD_ARG  ?= --build-arg DIST=alpine --build-arg REL=3.10
 
 IMG_REPO ?= mlan/openldap
 IMG_VER  ?= latest

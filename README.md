@@ -25,7 +25,7 @@ Brief feature list follows below
 - Accepts read only (RO) mounted database file systems
 - Built in utility script `ldap` helping managing the databases
 - Built in `.ldap` filters helping initiating and managing the databases
-- Unix domain (IPC) socket support
+- [Unix domain (IPC) socket](https://en.wikipedia.org/wiki/Unix_domain_socket) support
 - Configurable database paths, helping host volume management
 - Configurable run-as-user `uid` and `gid`
 
@@ -82,6 +82,7 @@ If you have your source OpenLDAP server running on the same host as you are runn
 This will create an OpenLDAP server with an users database that only contain an domain component entry. The configuration is customized by passing [environment variables](#environment-variables) on the `docker run` command line.
 
 #### Run container
+
 ```bash
 docker run -d --name openldap -p 389:389 \
   -e LDAP_DOMAIN=example.com \
@@ -91,6 +92,7 @@ docker run -d --name openldap -p 389:389 \
 ```
 
 #### Optional: Load user data
+
 Generate, for example, by using a text editor, a LDIF file, with you user data. Bind to the OpenLDAP server using the `ldapadd` command and the rootdn user credentials. Here we illustrate this procedure by using a file, containing a users sample, that comes with this repository.
 ```bash
 ldapadd -H ldap://:389 -x -D "cn=admin,dc=example,dc=com" -W -f seed/b/190-users.ldif
@@ -104,6 +106,7 @@ This will create a OpenLDAP server with default configuration and an users datab
 The default domain is `example.com`, the default rootdn is `cn=admin,dc=example,dc=com` and the default password is `secret`.
 
 #### Run container
+
 ```bash
 docker run -d -p 389:389 mlan/openldap
 ```
@@ -114,7 +117,7 @@ Now you can [test that it works](#test-your-openldap-server)
 An example of how to start an OpenLDAP server with already initiated (seeded) database using docker compose is given below:
 
 ```yaml
-version: '3.7'
+version: '3'
 services:
   auth:
     image: mlan/openldap:1
@@ -137,6 +140,7 @@ volumes:
 ## Test your OpenLDAP server
 
 #### Anonymous authentication
+
 ```bash
 ldapwhoami -H ldap://:389 -x
 
@@ -144,6 +148,7 @@ anonymous
 ```
 
 #### Server "domain"
+
 ```bash
 ldapsearch -H ldap://:389 -xLLL -s base namingContexts
 
@@ -152,6 +157,7 @@ namingContexts: dc=example,dc=com
 ```
 
 #### Domain component
+
 ```bash
 ldapsearch -H ldap://:389 -xLLL -b 'dc=example,dc=com' 'o=*'
 
@@ -206,6 +212,7 @@ This is an optional variable, undefined by default, which when set to a non-empt
 This leaves the users database completely empty, should this be desired.
 
 #### `LDAP_LOGLEVEL`
+
 This is an optional variable, set to `2048` by default. `LDAP_LOGLEVEL` can be 
 set to either the log level number, its hex-value, or its log-name. For example 
 setting `LDAP_LOGLEVEL` to `2048`, `0x800` or `parse` is equivalent. See 
@@ -214,6 +221,7 @@ for more details. Set to empty to allow the `olcLogLevel` database parameter to
 take precedence. Example usage: `LDAP_LOGLEVEL=parse`
 
 #### `LDAP_UIDGID`
+
 This is an optional variable, undefined by default, which when set allows 
 modifying the `uid` and `gid` of the ldap user running `slapd` inside the 
 container. Example usage: `LDAP_UIDGID=120:127` will set the run-as-user, named `LDAP_USER`, user `uid` to
@@ -225,27 +233,33 @@ you want a non root user be able to access the databases themselves.
 This is an optional variable, set to `ldap` by default. This is the name of the run-as-user within the container. Example usage: `LDAP_USER=ldap`
 
 #### `LDAP_CONFVOL`
+
 This is an optional variable, set to `/srv/conf` by default, which when set can
 be used to change the path to the config database within the container. Example usage: `LDAP_CONFVOL=/srv/conf`
 
 #### `LDAP_DATAVOL`
+
 This is an optional variable, set to `/srv/data` by default, which when set can
 be used to change the path to the users database within the container. Example usage: `LDAP_DATAVOL=/srv/data`
 
 #### `LDAP_CONFDIR`
+
 This is an optional variable, set to `/etc/openldap/slapd.d` by default, which should correspond to the distributions expected path to the config database,
 which here is replaced by the symbolic link pointing to it.
 
 #### `LDAP_DATADIR`
+
 This is an optional variable, set to `/var/lib/openldap/openldap-data` by 
 default, which should correspond to the distributions expected path to the users database, which here is replaced by the symbolic link pointing to it.
 
 #### `LDAP_RWCOPYDIR`
+
 This is an optional variable, set to `/tmp` by default. This directory path is used
 to determine the paths where copies `LDAP_CONFVOL` and `LDAP_DATAVOL` are placed if they are mounted read only. If you wish to disable this feature set
 this variable to empty, that is `LDAP_RWCOPYDIR=`
 
 #### `LDAP_MODULEDIR`
+
 This is an optional variable, set to `/usr/lib/openldap` by default, which when
 set can be used to change the path to the OpenLDAP modules.
 
@@ -269,7 +283,7 @@ This is an optional variable, set to `/var/lib/openldap/seed/a` by default, whic
 
 By default docker will store the databases within the container. This has the 
 drawback that the databases are deleted together with the container if it is
-deleted. The path to the configuration and data databases within the contatner
+deleted. The path to the configuration and data databases within the container
 are `LDAP_CONFVOL=/srv/conf` and `LDAP_DATAVOL=/srv/data` respectively. 
 Often it is useful to create a data directory on the host system 
 (outside the container) and mount this to a directory visible from inside 
@@ -290,6 +304,7 @@ Alternatively you can start an OpenLDAP server with persistent data using docker
 # Implementation details
 
 ## Database locations
+
 Typical paths are `/etc/openldap/slapd.d` and `/var/lib/openldap/openldap-data`.
 Here these paths are symlinked to `/srv/conf` and `/srv/data` respectively. 
 When the container is started and the directories `/srv/conf` and `/srv/data`
@@ -319,6 +334,7 @@ ldapadd -H ldap:// -x -D "cn=admin,dc=example,dc=com" -W -f seed/b/190-users.ldi
 
 Enter LDAP Password:
 ```
+
 ## Seeding
 
 Files in [LDAP Data Interchange Format (LDIF)](http://www.openldap.org/software/man.cgi?query=ldif&apropos=0&sektion=0&manpath=OpenLDAP+2.4-Release&format=html) can be used to seed the config and/or users databases.
@@ -403,6 +419,7 @@ docker exec -it openldap ldap add -f 'ldif_users' /var/lib/openldap/seed/b/191-u
 ```
 
 # Docker Compose #
+
 A [`docker-compose.yml`](docker-compose.yml) example is included in this repository.
 
 # Issues Bugs Suggestions ##

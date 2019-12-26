@@ -54,4 +54,4 @@ ENTRYPOINT ["entrypoint.sh"]
 
 CMD	[]
 
-EXPOSE 	389
+EXPOSE	389

@@ -1,6 +1,6 @@
 -include    *.mk
 
-BLD_ARG  ?= --build-arg DIST=alpine --build-arg REL=3.10
+BLD_ARG  ?= --build-arg DIST=alpine --build-arg REL=3.11
 
 IMG_REPO ?= mlan/openldap
 IMG_VER  ?= latest
@@ -58,12 +58,12 @@ start:
 	docker start $(CNT_NAME)
 
 stop:
-	docker stop $(CNT_NAME)
+	docker stop $(CNT_NAME) 2>/dev/null || true
 
 purge: rm-container rm-image
 
 rm-container:
-	docker rm $(CNT_NAME)
+	docker rm $(CNT_NAME) 2>/dev/null || true
 
 rm-image:
 	docker image rm $(IMG_REPO):$(IMG_VER)

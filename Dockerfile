@@ -11,7 +11,8 @@ RUN	apk --no-cache --update add \
 	openldap-overlay-all \
 	openldap-clients
 
-ENV	LDAP_CONFDIR=/etc/openldap/slapd.d \
+ENV	DOCKER_BIN_DIR=/usr/local/bin \
+	LDAP_CONFDIR=/etc/openldap/slapd.d \
 	LDAP_DATADIR=/var/lib/openldap/openldap-data \
 	LDAP_RUNDIR=/var/run/openldap \
 	LDAP_CONFVOL=/srv/conf \
@@ -43,8 +44,8 @@ RUN	rm -rf \
 	chown -h $LDAP_USER: $LDAP_CONFDIR $LDAP_DATADIR && \
 	ln -s /usr/local/bin/entrypoint.sh /usr/local/bin/ldap
 
-COPY	entrypoint.sh /usr/local/bin/
-COPY	seed/a/* $LDAP_SEEDDIRa/
+COPY	src/*/bin $DOCKER_BIN_DIR/
+COPY	src/*/seed/a/* $LDAP_SEEDDIRa/
 
 RUN	chown -R $LDAP_USER: ${LDAP_SEEDDIRa%/*}
 

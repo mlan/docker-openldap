@@ -1,10 +1,15 @@
+# Makefile
+#
+# build
+#
+
 -include    *.mk
 
 BLD_ARG  ?= --build-arg DIST=alpine --build-arg REL=3.12
 BLD_REPO ?= mlan/openldap
 BLD_VER  ?= latest
 TST_ENV  ?= -C test
-TST_TGTE ?= $(addprefix test-,all diff down env htop logs pull sh up)
+TST_TGTE ?= $(addprefix test-,all cat0 cat1 diff down env htop logs search0 search1 sh top up)
 TST_TGTI ?= test_% test-up_%
 
 build: Dockerfile
@@ -17,7 +22,7 @@ ps:
 	docker ps -a
 
 prune:
-	docker image prune
+	docker image prune -f
 
 clean:
 	docker images | grep $(BLD_REPO) | awk '{print $$1 ":" $$2}' | uniq | xargs docker rmi

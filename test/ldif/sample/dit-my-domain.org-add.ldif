@@ -1,4 +1,15 @@
-dn: cn=Harm Coddington,ou=Janitorial,dc=example,dc=com
+dn: dc=my-domain,dc=org
+dc: my-domain
+objectClass: dcObject
+objectClass: organization
+o: my-domain.org
+
+dn: ou=Janitorial,dc=my-domain,dc=org
+ou: Janitorial
+objectClass: top
+objectClass: organizationalUnit
+
+dn: cn=Harm Coddington,ou=Janitorial,dc=my-domain,dc=org
 changetype: add
 objectClass: top
 objectClass: person
@@ -25,6 +36,3 @@ initials: H. C.
 mobile: +1 818 858-6704
 pager: +1 818 524-2961
 roomNumber: 9651
-secretary: cn=Ester Manuel,ou=Product Testing,dc=example,dc=com
-manager: cn=Lynnea Pufpaff,ou=Management,dc=example,dc=com
-

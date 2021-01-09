@@ -4,54 +4,59 @@ ARG	REL=latest
 FROM	$DIST:$REL
 LABEL	maintainer=mlan
 
-# Install OpenLDAP
+#
+# Setup environment
+#
+ENV	DOCKER_BIN_DIR=/usr/local/bin \
+	DOCKER_CONF_DIR=/etc/openldap \
+	DOCKER_SLAPADD0_PATH="/ldif/0:/0.ldif:/etc/openldap/slapd.ldif" \
+	DOCKER_SLAPADD1_PATH="/ldif/1:/1.ldif" \
+	SYSLOG_LEVEL=7 \
+	DOCKER_DB0_DIR=/etc/openldap/slapd.d \
+	DOCKER_DB1_DIR=/var/lib/openldap/openldap-data \
+	DOCKER_RUN_DIR=/var/run/openldap \
+	DOCKER_IPC_DIR=/var/lib/openldap/run \
+	DOCKER_MOD_DIR=/usr/lib/openldap \
+	DOCKER_DB0_VOL=/srv/conf \
+	DOCKER_DB1_VOL=/srv/data \
+	DOCKER_RWCOPY_DIR=/tmp \
+	DOCKER_RUNAS=root: \
+	LDAPDEBUG=none \
+	LDAPURI="ldapi:/// ldap:///"
+
+#
+# Install OpenLDAP and arrange directory structure
+#
 RUN	apk --no-cache --update add \
 	openldap \
 	openldap-backend-all \
 	openldap-overlay-all \
-	openldap-clients
+	openldap-clients \
+	&& rm -rf \
+	$DOCKER_DB0_DIR \
+	$DOCKER_DB1_DIR \
+	&& mkdir -p \
+	$DOCKER_RUN_DIR \
+	$DOCKER_DB0_VOL \
+	$DOCKER_DB1_VOL \
+	$DOCKER_IPC_DIR \
+	&& chown -R $DOCKER_RUNAS \
+	$DOCKER_DB0_VOL \
+	$DOCKER_DB1_VOL \
+	$DOCKER_RUN_DIR \
+	&& ln -sf $DOCKER_DB0_VOL $DOCKER_DB0_DIR \
+	&& ln -sf $DOCKER_DB1_VOL $DOCKER_DB1_DIR \
+	&& chown -h $DOCKER_RUNAS $DOCKER_DB0_DIR $DOCKER_DB1_DIR
 
-ENV	DOCKER_BIN_DIR=/usr/local/bin \
-	LDAP_CONFDIR=/etc/openldap/slapd.d \
-	LDAP_DATADIR=/var/lib/openldap/openldap-data \
-	LDAP_RUNDIR=/var/run/openldap \
-	LDAP_CONFVOL=/srv/conf \
-	LDAP_DATAVOL=/srv/data \
-	LDAP_SEEDDIRa=/var/lib/openldap/seed/a \
-	LDAP_SEEDDIR0=/var/lib/openldap/seed/0 \
-	LDAP_SEEDDIR1=/var/lib/openldap/seed/1 \
-	LDAP_USER=ldap
-
-RUN	rm -rf \
-	$LDAP_CONFDIR \
-	$LDAP_DATADIR && \
-	mkdir -p \
-	$LDAP_RUNDIR \
-	$LDAP_CONFVOL \
-	$LDAP_DATAVOL \
-	$LDAP_SEEDDIRa \
-	$LDAP_SEEDDIR0 \
-	$LDAP_SEEDDIR1 && \
-	chown -R $LDAP_USER: \
-	$LDAP_CONFVOL \
-	$LDAP_DATAVOL \
-	$LDAP_RUNDIR \
-	$LDAP_SEEDDIRa \
-	$LDAP_SEEDDIR0 \
-	$LDAP_SEEDDIR1 && \
-	ln -sf $LDAP_CONFVOL $LDAP_CONFDIR && \
-	ln -sf $LDAP_DATAVOL $LDAP_DATADIR && \
-	chown -h $LDAP_USER: $LDAP_CONFDIR $LDAP_DATADIR && \
-	ln -s /usr/local/bin/entrypoint.sh /usr/local/bin/ldap
-
+#
+# Copy utility scripts including docker-entrypoint.sh to image
+#
 COPY	src/*/bin $DOCKER_BIN_DIR/
-COPY	src/*/seed/a/* $LDAP_SEEDDIRa/
+COPY	src/*/config $DOCKER_CONF_DIR/
 
-RUN	chown -R $LDAP_USER: ${LDAP_SEEDDIRa%/*}
+HEALTHCHECK CMD whoami || exit 1
 
-HEALTHCHECK CMD ldap whoami || exit 1
-
-ENTRYPOINT ["entrypoint.sh"]
+ENTRYPOINT ["docker-entrypoint.sh"]
 
 CMD	[]
 

@@ -1,8 +1,0 @@
-#### Seeding the users database
-
-Files with names ending with either `.ldif` or `.sh` in the `LDAP_SEEDDIR1` directory  will be applied when the container is run for the first time when there is no users database.
-The `*.ldif` files will be applied to the database by either using ldapadd or ldapmodify, whichever is appropriate, and `*.sh` files will be sourced in alphabetical order.
-
-Files in the `LDAP_SEEDDIR1` directory are ignored when a users database is present.
-
-If no `.ldif` or `.sh` files can be found in the `LDAP_SEEDDIR1` directory during seeding the files matching `LDAP_SEEDDIRa/1*` will be moved here and applied.

@@ -1,39 +1,19 @@
 version: '3'
 services:
-
-  ldap-clone:
+  auth:
     image: mlan/openldap
     networks:
       - backend
-    ports:
-      - "389:389"
-    volumes:
-      - ./seed:/var/lib/openldap/seed
-
-  ldap-init:
-    image: mlan/openldap
-    networks:
-      - backend
-    ports:
-      - "389:389"
+    command: --root-cn ${LDAPROOT_CN-admin} --root-pw ${LDAPROOT_PW-secret}
     environment:
-      - LDAP_DOMAIN=example.com
-      - LDAP_ROOTCN=admin
-      - LDAP_ROOTPW={SSHA}KirjzsjgMvjqBWNNof7ujKhwAZBfXmw3
-
-  ldap-persist:
-    image: mlan/openldap
-    networks:
-      - backend
-    environment:
-      - LDAP_LOGLEVEL=parse
+      - LDAPBASE=${LDAPBASE-dc=example,dc=com}
+      - LDAPDEBUG=${LDAPDEBUG-stats2}
     volumes:
-      - ldap-conf:/srv/conf
-      - ldap-data:/srv/data
-
-volumes:
-  ldap-conf:
-  ldap-data:
+      - auth:/srv
+      - /etc/localtime:/etc/localtime:ro        # Use host timezone
 
 networks:
   backend:
+
+volumes:
+  auth:

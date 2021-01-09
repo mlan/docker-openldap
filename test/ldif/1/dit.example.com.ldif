@@ -1,4 +1,9 @@
-version: 1
+#version: 1
+dn: dc=example,dc=com
+dc: example
+objectClass: dcObject
+objectClass: organization
+o: example.com
 
 dn: ou=Accounting,dc=example,dc=com
 ou: Accounting

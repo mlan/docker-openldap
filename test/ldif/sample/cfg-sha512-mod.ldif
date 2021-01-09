@@ -1,4 +1,3 @@
-#! sudo ldapmodify -Y EXTERNAL -H ldapi:///
 #
 # new passwords entered for ldap users will use the os crypt backend and SHA512 with salt
 #

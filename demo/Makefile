@@ -16,12 +16,19 @@ SRV_CNT  ?= $(call dkr_srv_cnt, auth)
 
 srv_list ?= auth dns gui
 
+NET_ENV  ?= --rm --network=demo_backend
+SSL_ENV  ?= $(NET_ENV) \
+	-v $$(pwd)/ssl:/ssl \
+	-e LDAPTLS_CACERT=ssl/ca.crt \
+	-e LDAPTLS_CERT=ssl/auth.crt \
+	-e LDAPTLS_KEY=ssl/auth.key
+
 variables:
 	make -pn | grep -A1 "^# makefile"| grep -v "^#\|^--" | sort | uniq
 
 init: up auth-init
 
-test: auth-url_all
+test: auth-who_all
 
 web:
 	firefox localhost:8001 &
@@ -154,16 +161,13 @@ endef
 export LDIF_ADD_SSL
 
 auth-mod_conf:
-	echo "$$LDIF_MOD_CONF" | docker-compose exec -T auth ldapmodify
+	echo "$$LDIF_MOD_CONF" | docker-compose exec -T auth ldapmodify -Q
 
 auth-add_data:
-	echo "$$LDIF_ADD_DATA" | docker-compose exec -T auth ldapmodify
+	echo "$$LDIF_ADD_DATA" | docker-compose exec -T auth ldapmodify -Q
 
-auth-add_ssl: auth-cp_ssl
-	echo "$$LDIF_ADD_SSL" | docker-compose exec -T auth ldapmodify
-
-auth-cp_ssl: ssl/auth.crt ssl/demo.crt
-	docker cp ssl $(call dkr_srv_cnt,auth):/srv/ssl
+auth-add_ssl: ssl/auth.crt
+	echo "$$LDIF_ADD_SSL" | docker-compose exec -T auth ldapmodify -Q
 
 auth-show_conf:
 	docker-compose exec auth ldapsearch -b cn=config "(cn=config)"
@@ -182,19 +186,19 @@ auth-show_cat1:
 auth-show_debug:
 	docker-compose exec auth slapd -d ?
 
-auth-url_all: $(addprefix auth-url_, ldapi ldap ldaps starttls)
+auth-who_all: $(addprefix auth-who_, ldapi ldap ldaps starttls)
 
-auth-url_ldapi:
-	docker-compose exec auth ldapwhoami
+auth-who_ldapi:
+	docker-compose exec auth ldapwhoami -Q
 
-auth-url_ldap:
-	ldapwhoami -xH ldap://auth/
+auth-who_ldap:
+	docker run $(NET_ENV) mlan/openldap ldapwhoami -xH ldap://auth/
 
-auth-url_ldaps:
-	ldapwhoami -H ldaps://auth/
+auth-who_ldaps:
+	docker run $(SSL_ENV) mlan/openldap ldapwhoami -QH ldaps://auth/
 
-auth-url_starttls:
-	ldapwhoami -ZZH ldap://auth/
+auth-who_starttls:
+	docker run $(SSL_ENV) mlan/openldap ldapwhoami -ZZQH ldap://auth/
 
 auth-htop: auth-debugtools
 	docker-compose exec auth htop

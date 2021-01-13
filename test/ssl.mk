@@ -88,7 +88,7 @@ ssl:
 # Remove all files in SSL directory
 #
 ssl-destroy:
-	rm -rf ssl
+	rm -f ssl/*
 
 #
 # Inspect all files in SSL directory

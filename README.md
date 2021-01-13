@@ -397,19 +397,14 @@ subject=CN = root, O = example.com
 X509v3 Basic Constraints: critical
     CA:TRUE
 
-ssl/client.crt
+ssl/auth.crt
 issuer=CN = root, O = example.com
-subject=CN = client, O = example.com
-No extensions in certificate
-
-ssl/server.crt
-issuer=CN = root, O = example.com
-subject=CN = server, O = example.com
+subject=CN = auth, O = example.com
 No extensions in certificate
 ```
 
 ```sh
-make ssl/server.crt ssl/client.crt ssl-list
+make ssl/auth.crt ssl-list
 ```
 
 ### Configure LDAP directory server
@@ -427,10 +422,10 @@ add: olcTLSCACertificateFile
 olcTLSCACertificateFile: /srv/ssl/ca.crt
 -
 add: olcTLSCertificateKeyFile
-olcTLSCertificateKeyFile: /srv/ssl/server.key
+olcTLSCertificateKeyFile: /srv/ssl/auth.key
 -
 add: olcTLSCertificateFile
-olcTLSCertificateFile: /srv/ssl/server.crt
+olcTLSCertificateFile: /srv/ssl/auth.crt
 -
 add: olcTLSVerifyClient
 olcTLSVerifyClient: demand
@@ -438,10 +433,12 @@ olcTLSVerifyClient: demand
 
 ### Configure LDAP client
 
+`ldaprc`
+
 ```sh
 TLS_CACERT ssl/ca.crt
-TLS_CERT   ssl/client.crt
-TLS_KEY    ssl/client.key
+TLS_CERT   ssl/auth.crt
+TLS_KEY    ssl/auth.key
 ```
 
 ## Recreate the host database

@@ -159,11 +159,6 @@ oc_slapadd_filter() {
 # Parse command arguments
 #
 openldap_envs_from_args() {
-	oc_envs_args "$@"
-#	oc_envs_maps # TODO
-}
-
-oc_envs_args() {
 	local var=
 	while [[ "$#" -ge 1 ]]; do
 		case "$1" in
@@ -175,12 +170,7 @@ oc_envs_args() {
 			shift 1
 			;;
 		*)
-			if type $1 >/dev/null; then
-				export DOCKER_CMD="$@"
-			else
-				dc_log 4 "invalid arguments: $@"
-			fi
-			shift $#
+			exec "$@"
 			;;
 		esac
 	done

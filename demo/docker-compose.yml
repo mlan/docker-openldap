@@ -12,16 +12,8 @@ services:
       - LDAPDEBUG=${LDAPDEBUG-stats2}
     volumes:
       - auth:/srv
+      - ./ssl:/srv/ssl
       - /etc/localtime:/etc/localtime:ro        # Use host timezone
-
-  dns:
-    image: defreitas/dns-proxy-server
-    hostname: dns
-    environment:
-      - MG_REGISTER_CONTAINER_NAMES=1
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - /etc/resolv.conf:/etc/resolv.conf
 
   gui:
     image: osixia/phpldapadmin

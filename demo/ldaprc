@@ -1,0 +1,3 @@
+TLS_CACERT ssl/ca.crt
+TLS_CERT   ssl/demo.crt
+TLS_KEY    ssl/demo.key

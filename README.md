@@ -72,7 +72,7 @@ SASL authentication binds the LDAP server to another authentication mechanism, l
 
 It’s important to note that LDAP passes messages in clear text by default. You need to add TLS encryption or similar to keep your usernames and passwords safe.
 
-### Directory socket `ldapi:///` scheme
+### Directory socket `ldapi://` scheme
 
 When you have direct access to the container you can use the built in LDAP client tools, using the Unix socket `ldapi:///`, to query and manage the directory.
 
@@ -82,9 +82,9 @@ Most directories are configured to allow the root user, via SASL, full access to
 docker exec auth ldapsearch "(&(objectClass=inetOrgPerson)(cn=demo))"
 ```
 
-### Directory network `ldap:///` scheme
+### Directory network `ldap://` scheme
 
-Other containers most often communicate with the directory service over the network. The standard LDAP port is 389. For secure LDAPS the 636 port is used.
+Other containers most often communicate with the directory service over the network. The standard LDAP port is 389. For secure LDAPS the 636 port is used, see [Secure LDAP, StartTLS and TLS/SSL `ldaps://`](#secure-ldap,-starttls-and-tls/ssl-ldaps://).
 
 Most directories are configured to allow anonymous queries. So remote queries can look like this.
 
@@ -126,13 +126,34 @@ This repository contains a [demo](demo) directory which hold the [docker-compose
 git clone https://github.com/mlan/docker-openldap.git
 ```
 
-From within the [demo](demo) directory you can start the container, and configure the directory database to hold a demo user, by typing:
+From within the [demo](demo) directory you can start the containers, configure the directory database to hold a demo user and creating TLS certificates and keys, by typing:
 
 ```bash
 make init
 ```
 
-Now you can send some queries to the directory service you just created. First we can try using the Unix socket scheme:
+Now you can check that you can access the directory service you just created using any of the LDAPI, LDAP, LDAPS and StartTLS protocols, by typing:
+
+```sh
+make test
+```
+
+Which translates to:
+
+```sh
+docker-compose exec auth ldapwhoami
+ldapwhoami -x -H ldap://auth/
+ldapwhoami -x -H ldaps://auth/
+ldapwhoami -x -ZZ -H ldap://auth/
+```
+
+You can view the contents of the directory by using a web interface on the URL [`http://localhost:8001`](http://localhost:8008) after you have logged in with the DN: `cn=admin,dc=example,dc=com` and password: `secret`.
+
+```bash
+make web
+```
+
+Another way to view the directory data is to perform a LDAP search, here by using the LDAPI socket scheme:
 
 ```sh
 make auth-show_data
@@ -144,25 +165,7 @@ Which translates to:
 docker-compose exec auth ldapsearch
 ```
 
-We can also send a query over the network:
-
-```sh
-make auth-show_contexts
-```
-
-Which translates to:
-
-```sh
-ldapsearch -H ldap://172.31.0.2/ -xLLL -s base namingContexts
-```
-
-You can view the directory database by using a web interface on the URL [`http://localhost:8001`](http://localhost:8008) after you have logged in with the DN: `cn=admin,dc=example,dc=com` and password: `secret`.
-
-```bash
-make auth-gui-up
-```
-
-When you are done testing you can destroy the test containers by typing
+When you are done testing you can destroy the test containers, volumes and files by typing:
 
 ```bash
 make destroy
@@ -328,13 +331,16 @@ When you start an `mlan/openldap` container, you can adjust its configuration by
 
 The available commands arguments and environment variables are listed below.
 
-| Argument  | Environment, -e | Example           |
-| --------- | --------------- | ----------------- |
-| --base    | LDAPBASE        | dc=example,dc=com |
-| --root-cn | LDAPROOT_CN     | admin             |
-| --root-pw | LDAPROOT_PW     | secret            |
-| --runas   | LDAPRUNAS       | 1001:1002         |
-| --debug   | LDAPDEBUG       | stats             |
+| Argument  | Environment, -e | Example            |
+| --------- | --------------- | ------------------ |
+|           | LDAPURI         | ldapi:/// ldap:/// |
+| --base    | LDAPBASE        | dc=example,dc=com  |
+| --root-cn | LDAPROOT_CN     | admin              |
+| --root-pw | LDAPROOT_PW     | secret             |
+| --runas   | LDAPRUNAS       | 1001:1002          |
+| --debug   | LDAPDEBUG       | stats              |
+
+#### `LDAPURI`
 
 #### `LDAPBASE`
 
@@ -373,6 +379,70 @@ Sometimes you want the daemon and its files to be run by and owed by a specific 
 # Knowledge base
 
 Here some topics relevant for directory servers are presented.
+
+## Secure LDAP, StartTLS and TLS/SSL `ldaps://`
+
+LDAP over TLS/SSL (ldaps://) is deprecated in favor of StartTLS. The latter refers to an existing LDAP session (listening on TCP port 389) becoming protected by TLS/SSL whereas LDAPS, like HTTPS, is a distinct encrypted-from-the-start protocol that operates over TCP port 636.
+
+[Using TLS](https://openldap.org/doc/admin21/tls.html)
+
+All servers are required to have valid certificates, whereas client certificates are optional. Clients must have a valid certificate in order to authenticate via SASL EXTERNAL.
+
+### TLS/SSL Certificates
+
+```makefile
+ssl/ca.crt
+issuer=CN = root, O = example.com
+subject=CN = root, O = example.com
+X509v3 Basic Constraints: critical
+    CA:TRUE
+
+ssl/client.crt
+issuer=CN = root, O = example.com
+subject=CN = client, O = example.com
+No extensions in certificate
+
+ssl/server.crt
+issuer=CN = root, O = example.com
+subject=CN = server, O = example.com
+No extensions in certificate
+```
+
+```sh
+make ssl/server.crt ssl/client.crt ssl-list
+```
+
+### Configure LDAP directory server
+
+The DN of a server certificate must use the `CN` attribute to name the server, and the `CN` must carry the server's fully qualified domain name. Additional alias names and wildcards may be present in the `subjectAltName` certificate extension. The server must be configured with the CA certificates and also its own server certificate and private key.
+
+The DN of a client certificate can be used directly as an authentication DN. At a minimum, the clients must be configured with the filename containing all of the Certificate Authority (CA) certificates it will trust. 
+
+[Configure OpenLDAP with TLS certificates](https://www.golinuxcloud.com/configure-openldap-with-tls-certificates/)
+
+```yml
+dn: cn=config
+changetype: modify
+add: olcTLSCACertificateFile
+olcTLSCACertificateFile: /srv/ssl/ca.crt
+-
+add: olcTLSCertificateKeyFile
+olcTLSCertificateKeyFile: /srv/ssl/server.key
+-
+add: olcTLSCertificateFile
+olcTLSCertificateFile: /srv/ssl/server.crt
+-
+add: olcTLSVerifyClient
+olcTLSVerifyClient: demand
+```
+
+### Configure LDAP client
+
+```sh
+TLS_CACERT ssl/ca.crt
+TLS_CERT   ssl/client.crt
+TLS_KEY    ssl/client.key
+```
 
 ## Recreate the host database
 

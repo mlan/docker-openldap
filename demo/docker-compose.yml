@@ -2,15 +2,37 @@ version: '3'
 services:
   auth:
     image: mlan/openldap
+    hostname: auth
     networks:
       - backend
     command: --root-cn ${LDAPROOT_CN-admin} --root-pw ${LDAPROOT_PW-secret}
     environment:
+      - LDAPURI=${LDAPURI-ldapi:/// ldap:///}
       - LDAPBASE=${LDAPBASE-dc=example,dc=com}
       - LDAPDEBUG=${LDAPDEBUG-stats2}
     volumes:
       - auth:/srv
       - /etc/localtime:/etc/localtime:ro        # Use host timezone
+
+  dns:
+    image: defreitas/dns-proxy-server
+    hostname: dns
+    environment:
+      - MG_REGISTER_CONTAINER_NAMES=1
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /etc/resolv.conf:/etc/resolv.conf
+
+  gui:
+    image: osixia/phpldapadmin
+    hostname: gui
+    ports:
+      - "127.0.0.1:8001:80"
+    networks:
+      - backend
+    environment:
+      - PHPLDAPADMIN_LDAP_HOSTS=auth
+      - PHPLDAPADMIN_HTTPS=false
 
 networks:
   backend:

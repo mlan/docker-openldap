@@ -9,6 +9,7 @@
 - [openldap](src/openldap/bin/openldap-common.sh) Now default ldapi socket is used.
 - [openldap](src/openldap/config/slapd.ldif) _BREAKING!_ Now no default domain component entry, `dcObject`, is created.
 - [docker](README.md) Reworked documentation.
+- [demo](demo) Now also demonstrate StartTLS and TLS/SSL.
 
 # 1.1.0
 

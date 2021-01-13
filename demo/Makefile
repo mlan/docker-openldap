@@ -9,18 +9,22 @@ AD_BASE  ?= $(LDAPBASE)
 AD_DOM   ?= $(call ad_sub_dot, $(AD_BASE))
 AD_DC    ?= $(call ad_cut_dot, 1, 1, $(AD_DOM))
 
+SSL_O     = $(AD_DOM)
+
 SRV_IP   ?= $(call dkr_srv_ip, auth)
 SRV_CNT  ?= $(call dkr_srv_cnt, auth)
 
-srv_list ?= auth
-
-test:
-	echo "IP $(SRV_IP), CNT $(SRV_CNT)"
+srv_list ?= auth dns gui
 
 variables:
 	make -pn | grep -A1 "^# makefile"| grep -v "^#\|^--" | sort | uniq
 
 init: up auth-init
+
+test: auth-url_all
+
+web:
+	firefox localhost:8001 &
 
 ps:
 	docker-compose ps
@@ -31,7 +35,7 @@ up:
 down:
 	docker-compose down
 
-destroy: auth-gui-down
+destroy: ssl-destroy
 	docker-compose down -v
 
 config:
@@ -86,9 +90,7 @@ $(addsuffix -hosts,$(srv_list)):
 wait_%:
 	sleep $*
 
-auth-init: wait_2 auth-mod_conf auth-add_data
-
-auth-clone: wait_2 auth-create host-backup auth-start
+auth-init: wait_2 auth-mod_conf auth-add_data auth-add_ssl
 
 define LDIF_MOD_CONF
 dn: olcDatabase={-1}frontend,cn=config
@@ -107,14 +109,6 @@ add: olcDbIndex
 olcDbIndex: cn,ou,uid,mail eq
 endef
 export LDIF_MOD_CONF
-
-define LDIF_MOD_LOGL
-dn: cn=config
-changetype: modify
-add: olcLoglevel
-olcLoglevel: any
-endef
-export LDIF_MOD_LOGL
 
 define LDIF_ADD_DATA
 dn: $(AD_BASE)
@@ -142,14 +136,34 @@ title: $(AD_USR_TIT)
 endef
 export LDIF_ADD_DATA
 
+define LDIF_ADD_SSL
+dn: cn=config
+changetype: modify
+add: olcTLSCACertificateFile
+olcTLSCACertificateFile: /srv/ssl/ca.crt
+-
+add: olcTLSCertificateKeyFile
+olcTLSCertificateKeyFile: /srv/ssl/auth.key
+-
+add: olcTLSCertificateFile
+olcTLSCertificateFile: /srv/ssl/auth.crt
+-
+add: olcTLSVerifyClient
+olcTLSVerifyClient: demand
+endef
+export LDIF_ADD_SSL
+
 auth-mod_conf:
 	echo "$$LDIF_MOD_CONF" | docker-compose exec -T auth ldapmodify
 
 auth-add_data:
 	echo "$$LDIF_ADD_DATA" | docker-compose exec -T auth ldapmodify
 
-auth-mod_logl:
-	echo "$$LDIF_MOD_LOGL" | docker-compose exec -T auth ldapmodify
+auth-add_ssl: auth-cp_ssl
+	echo "$$LDIF_ADD_SSL" | docker-compose exec -T auth ldapmodify
+
+auth-cp_ssl: ssl/auth.crt ssl/demo.crt
+	docker cp ssl $(call dkr_srv_cnt,auth):/srv/ssl
 
 auth-show_conf:
 	docker-compose exec auth ldapsearch -b cn=config "(cn=config)"
@@ -165,8 +179,22 @@ auth-show_cat0:
 auth-show_cat1:
 	docker-compose exec auth slapcat -n1
 
-auth-show_contexts:
-	ldapsearch -H ldap://$(SRV_IP)/ -xLLL -s base namingContexts
+auth-show_debug:
+	docker-compose exec auth slapd -d ?
+
+auth-url_all: $(addprefix auth-url_, ldapi ldap ldaps starttls)
+
+auth-url_ldapi:
+	docker-compose exec auth ldapwhoami
+
+auth-url_ldap:
+	ldapwhoami -xH ldap://auth/
+
+auth-url_ldaps:
+	ldapwhoami -H ldaps://auth/
+
+auth-url_starttls:
+	ldapwhoami -ZZH ldap://auth/
 
 auth-htop: auth-debugtools
 	docker-compose exec auth htop
@@ -174,22 +202,3 @@ auth-htop: auth-debugtools
 auth-debugtools:
 	docker-compose exec auth apk --no-cache --update add \
 	nano less lsof htop bind-tools iputils strace
-
-auth-gui-up:
-	docker run -d --rm --name auth-gui --network demo_backend \
-	-p 127.0.0.1:8001:80 -e PHPLDAPADMIN_LDAP_HOSTS=auth \
-	-e PHPLDAPADMIN_HTTPS=false osixia/phpldapadmin || true
-	sleep 2
-	firefox localhost:8001 &
-
-auth-gui-down:
-	docker stop auth-gui || true
-
-# remove?
-host-backup:
-	sudo slapcat -n 0 -o ldif-wrap=no > /tmp/0.ldif
-	docker cp /tmp/0.ldif $(call dkr_srv_cnt,auth):/
-	sudo slapcat -n 1 -o ldif-wrap=no > /tmp/1.ldif
-	docker cp /tmp/0.ldif $(call dkr_srv_cnt,auth):/
-	rm /tmp/?.ldif
-

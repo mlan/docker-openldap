@@ -296,6 +296,23 @@ test-sh:
 test-top:
 	docker exec -it $(AUT_NAME) top
 
+define LDIF_ADD_SSL
+dn: cn=config
+add: olcTLSCACertificateFile
+olcTLSCACertificateFile: /etc/ssl/openldap/ca.crt
+-
+add: olcTLSCertificateFile
+olcTLSCertificateFile: /etc/ssl/openldap/auth.crt
+-
+add: olcTLSCertificateKeyFile
+olcTLSCertificateKeyFile: /etc/ssl/openldap/auth.key
+endef
+export LDIF_ADD_SSL
+
+test-tls: ssl/ca.key ssl/ca.crt ssl/auth.key ssl/auth.crt
+	docker cp ssl $(AUT_NAME):/etc/ssl/openldap
+	echo "$$LDIF_ADD_SSL" | docker exec -i $(AUT_NAME) ldapadd
+
 host-backup:
 	docker run --name tmp -it -d $(VOLK_ENV) alpine sh
 	docker exec tmp mkdir -p /ldif/0 /ldif/1

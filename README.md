@@ -138,13 +138,13 @@ Now you can check that you can access the directory service you just created usi
 make test
 ```
 
-Which translates to:
+Which essentially translates to:
 
 ```sh
 docker-compose exec auth ldapwhoami
-ldapwhoami -x -H ldap://auth/
-ldapwhoami -x -H ldaps://auth/
-ldapwhoami -x -ZZ -H ldap://auth/
+ldapwhoami -xH ldap://auth/
+ldapwhoami -H ldaps://auth/
+ldapwhoami -ZZH ldap://auth/
 ```
 
 You can view the contents of the directory by using a web interface on the URL [`http://localhost:8001`](http://localhost:8008) after you have logged in with the DN: `cn=admin,dc=example,dc=com` and password: `secret`.
@@ -333,14 +333,16 @@ The available commands arguments and environment variables are listed below.
 
 | Argument  | Environment, -e | Example            |
 | --------- | --------------- | ------------------ |
-|           | LDAPURI         | ldapi:/// ldap:/// |
 | --base    | LDAPBASE        | dc=example,dc=com  |
+| --debug   | LDAPDEBUG       | stats              |
 | --root-cn | LDAPROOT_CN     | admin              |
 | --root-pw | LDAPROOT_PW     | secret             |
 | --runas   | LDAPRUNAS       | 1001:1002          |
-| --debug   | LDAPDEBUG       | stats              |
+| --uri     | LDAPURI         | ldapi:/// ldap:/// |
 
 #### `LDAPURI`
+
+Specifies which URIs the LDAP server should listen to and where the builtin client tools should attempt to connect to it, see the [slapd man pages](https://www.openldap.org/software//man.cgi?query=slapd) for details. The default URIs are `LDAPURI=ldapi:/// ldap:///`. To also configure the server to also listen to secure LDAPS set `LDAPURI=ldapi:/// ldap:/// ldaps:///`. Note that this is not needed to setup StartTLS.
 
 #### `LDAPBASE`
 
@@ -382,13 +384,19 @@ Here some topics relevant for directory servers are presented.
 
 ## Secure LDAP, StartTLS and TLS/SSL `ldaps://`
 
-LDAP over TLS/SSL (ldaps://) is deprecated in favor of StartTLS. The latter refers to an existing LDAP session (listening on TCP port 389) becoming protected by TLS/SSL whereas LDAPS, like HTTPS, is a distinct encrypted-from-the-start protocol that operates over TCP port 636.
+LDAP over TLS/SSL (`ldaps://`) is deprecated in favor of StartTLS. The latter refers to an existing LDAP session (listening on TCP port 389) becoming protected by TLS/SSL whereas LDAPS, like HTTPS, is a distinct encrypted-from-the-start protocol that operates over TCP port 636.
 
-[Using TLS](https://openldap.org/doc/admin21/tls.html)
-
-All servers are required to have valid certificates, whereas client certificates are optional. Clients must have a valid certificate in order to authenticate via SASL EXTERNAL.
+All servers are required to have valid certificates, whereas client certificates are optional.
 
 ### TLS/SSL Certificates
+
+The server must be provided with a [root certificate authority (CA) certificate](https://en.wikipedia.org/wiki/X.509) and its own server certificate and private key. For the the server and the optional client certificates to be trusted by the system they need to be issued by a recognized root certificate. That is, their `issuer` entry must be identical to the `subject` entry of the root CA certificate. So for example, `subject=CN=root,O=example.com` in the `ssl/ca.crt` root certificate and `issuer=CN=root,O=example.com` in the `ssl/auth.crt` server/client certificate.
+
+The [(DN)](https://en.wikipedia.org/wiki/Lightweight_Directory_Access_Protocol) of a server certificate, that is, its `subject` entry, must use its `CN` attribute to name the server, and the `CN` must carry the server's [fully qualified domain name (FQDN)](https://en.wikipedia.org/wiki/Fully_qualified_domain_name). Additional alias names and wildcards may be present in the `subjectAltName` certificate extension. Within the network of the [demo](#demo), see above, the FQDN of the server is simply `auth` so we use `CN=auth` in `ssl/auth.crt`.
+
+Client must, at a minimum, be provided with the root CA certificate it will trust to accept the server certificate. It is the same root CA certificate that is used by the server. The client needs its own certificate, if the server is configured (`olcTLSVerifyClient`) to verify it. A client certificate is valid if it is issued by the root CA certificate. Clients must have a valid certificate in order to authenticate via the SASL EXTERNAL mechanism.
+
+Additionally, the distinguished name (DN) of a client certificate can be used directly as an authentication DN looked up in the LDAP directory. But when such lookup is not done, it is possible for the client to also use the server certificate since any distinguished name (DN) of the client certificate will be accepted. Such usage is deployed in the [demo](#demo) above.
 
 ```makefile
 ssl/ca.crt
@@ -403,17 +411,19 @@ subject=CN = auth, O = example.com
 No extensions in certificate
 ```
 
+The certificates above can be generated in typing the following within the [demo](#demo):
+
 ```sh
 make ssl/auth.crt ssl-list
 ```
 
+Read more about generating certificates here, [Configure OpenLDAP with TLS certificates](https://www.golinuxcloud.com/configure-openldap-with-tls-certificates/).
+
 ### Configure LDAP directory server
 
-The DN of a server certificate must use the `CN` attribute to name the server, and the `CN` must carry the server's fully qualified domain name. Additional alias names and wildcards may be present in the `subjectAltName` certificate extension. The server must be configured with the CA certificates and also its own server certificate and private key.
+The LDAP directory server needs the certificate and key files and a valid configuration to enable secure LDAP, see [using TLS](https://openldap.org/doc/admin21/tls.html). The files can be made available anywhere in the container file system, but, to achieve persistence, placing them in `/srv/ssl` might be advantageous.
 
-The DN of a client certificate can be used directly as an authentication DN. At a minimum, the clients must be configured with the filename containing all of the Certificate Authority (CA) certificates it will trust. 
-
-[Configure OpenLDAP with TLS certificates](https://www.golinuxcloud.com/configure-openldap-with-tls-certificates/)
+An example of an LDIF file configuring TLS is shown below:
 
 ```yml
 dn: cn=config
@@ -431,9 +441,11 @@ add: olcTLSVerifyClient
 olcTLSVerifyClient: demand
 ```
 
+The `olcTLSVerifyClient` directive specifies what checks to perform on client certificates. It can be `never` (the default), `allow`, `try` and `demand`, see [using TLS](https://openldap.org/doc/admin21/tls.html) for details.
+
 ### Configure LDAP client
 
-`ldaprc`
+The OpenLDAP client configuration is described [here](https://www.openldap.org/software//man.cgi?query=ldap.conf). To enable client verification the `ldaprc` file can look like this:
 
 ```sh
 TLS_CACERT ssl/ca.crt
@@ -467,11 +479,10 @@ Since you might have a directory server running on the same host as you are runn
 
 # Implementation
 
-## Database locations
+## Database RW and RO file system locations
 
-Typical paths are `DOCKER_DB0_DIR=/etc/openldap/slapd.d` and `DOCKER_DB1_DIR=/var/lib/openldap/openldap-data`.
-Here these paths are symlinked to `DOCKER_DB0_VOL=/srv/conf` and `DOCKER_DB1_VOL=/srv/data` respectively.
+Typically the   paths are `DOCKER_DB0_DIR=/etc/openldap/slapd.d` and `DOCKER_DB1_DIR=/var/lib/openldap/openldap-data` to the configuration and directory databases.
+To help achieving persistent storage these paths are symbolic links to `DOCKER_DB0_VOL=/srv/conf` and `DOCKER_DB1_VOL=/srv/data` respectively.
 
-When the container is started and the directories `/srv/conf` and `/srv/data`
-are mounted read only (RO), they are copied to `/tmp/conf` and `/tmp/data`, as defined by `DOCKER_RWCOPY_DIR=/tmp`, and the symlinks in `/etc/openldap/slapd.d` and `/var/lib/openldap/openldap-data` are changed accordingly.
-This directory path is used to determine the paths where copies `DOCKER_DB0_VOL` and `DOCKER_DB1_VOL` are placed if they are mounted read only. If you wish to disable this feature set `DOCKER_RWCOPY_DIR=` to empty.
+In the special case that the any of the directories `/srv/conf` and `/srv/data`
+are mounted read only (RO), they are copied to `/tmp/conf` and `/tmp/data`, as defined by `DOCKER_RWCOPY_DIR=/tmp`, and the symbolic links in `/etc/openldap/slapd.d` and `/var/lib/openldap/openldap-data` are changed accordingly. This is done to allow the server to operate also in such situation. Note that any modifications done to the database in such situations will be lost if the container is removed. f you wish to disable this feature set `DOCKER_RWCOPY_DIR=` to empty.

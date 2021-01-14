@@ -17,19 +17,16 @@ DOCKER_MOD_DIR=${DOCKER_MOD_DIR-/usr/lib/openldap}
 DOCKER_DB0_VOL=${DOCKER_DB0_VOL-/srv/conf}
 DOCKER_DB1_VOL=${DOCKER_DB1_VOL-/srv/data}
 DOCKER_RWCOPY_DIR=${DOCKER_RWCOPY_DIR-/tmp}
-DOCKER_RUNAS=${LDAPRUNAS-$DOCKER_RUNAS}  # TODO confusing please fix
+DOCKER_RUNAS=${DOCKER_RUNAS-root}
 
 #
 # Helpers
 #
 
 oc_find_ldif() { find "$@" -type f -iname "*.ldif" 2> /dev/null ;}
-#oc_isfor_slapadd() { [ -n "$(sed '1,1000!d;{/dn: .*cn=config/!d;N;/changetype/d}' $1)" ] ;}
 oc_escdiv() { echo $1 | sed 's|/|\\\/|g' ;}
-#oc_escurl() { echo $1 | sed 's|/|%2F|g' ;}
 oc_dc() { echo "$1" | sed 's/\./,dc=/g' ;}
 oc_dn() { echo "cn=$1,$2" ;}
-#oc_isadd() { [ -z "$(sed '1,1000!d;/changetype: /!d;q' $1)" ] && echo "-a" ;}
 
 #
 #
@@ -83,16 +80,17 @@ oc_howmnt() {
 # make sure all files are rw by user $DOCKER_RUNAS
 #
 oc_fixatr() {
-	local uid=${DOCKER_RUNAS%:*}
+	local runas=${LDAPRUNAS-$DOCKER_RUNAS}
+	local uid=${runas%:*}
 	for dir in $@; do
-		if [ -n "$(find $dir ! -user $uid -print -exec chown -h $DOCKER_RUNAS {} \;)" ]; then
-			dc_log 5 "Changed owner to $uid for some files in $dir"
+		if [ -n "$(find $dir ! -user $uid -print -exec chown -h $runas {} \;)" ]; then
+			dc_log 6 "Changed owner to $uid for some files in $dir"
 		fi
-		if [ -n "$(find -L $dir ! -user $uid -print -exec chown $DOCKER_RUNAS {} \;)" ]; then
-			dc_log 5 "Changed owner to $uid for some files in $dir"
+		if [ -n "$(find -L $dir ! -user $uid -print -exec chown $runas {} \;)" ]; then
+			dc_log 6 "Changed owner to $uid for some files in $dir"
 		fi
 		if [ -n "$(find -H $dir ! -perm -u+rw -print -exec chmod u+rw {} \;)" ]; then
-			dc_log 5 "Changed permision to rw for some files in $dir"
+			dc_log 6 "Changed permision to rw for some files in $dir"
 		fi
 	done
 }
@@ -105,9 +103,9 @@ oc_fixatr() {
 openldap_create_db() {
 	for dbnum in 0 1; do
 		if [ -n "$(slapcat -n $dbnum)" ]; then
-			dc_log 5 "Database $dbnum present, so not touching it"
+			dc_log 6 "Database $dbnum present, so not touching it"
 		else
-			dc_log 5 "Database $dbnum not found, looking for backup files"
+			dc_log 6 "Database $dbnum not found, looking for backup files"
 			oc_slapadd_dbnum $dbnum
 		fi
 	done
@@ -162,12 +160,14 @@ openldap_envs_from_args() {
 	local var=
 	while [[ "$#" -ge 1 ]]; do
 		case "$1" in
-		--base|--root-cn|--root-pw|--runas|--debug)
+		--base|--debug|--root-cn|--root-pw|--runas|--uri)
 			eval "export $(oc_arg_to_var $1)=$2"
 			shift 2
 			;;
 		--*)
 			shift 1
+			;;
+		slapd)
 			;;
 		*)
 			exec "$@"
@@ -181,26 +181,17 @@ oc_arg_to_var() { echo "$@" | sed 's/--/ldap/;s/-/_/g' | tr [a-z] [A-Z] ;}
 #
 #
 #
-# Run command
-# TODO needs cleanup
+# Start the LDAP directory server
 #
 openldap_entrypoint_cmd() {
-	# try to start slapd if it not running
-	# if user provided any argument assume they are the desired start command
-#	LDAP_LOGLEVEL=${LDAP_LOGLEVEL-$DOCKER_LDAP_LOGLEVEL}
 	oc_runas
-	eval "set -- ${DOCKER_CMD-$DOCKER_SLAPD_CMD}"
-	if [ -z "$(pidof $1)" ]; then
-		dc_log 7 "DOCKER_CMD=$DOCKER_CMD"
-		dc_log 5 "exec $@"
-		exec "$@"
-	else
-		dc_log 5 "$1 already running"
-	fi
+	eval "set -- ${DOCKER_SLAPD_CMD}"
+	dc_log 7 "exec $@"
+	exec "$@"
 }
 
 #
-# change $DOCKER_RUNAS uid and gid if LDAPRUNAS defined.
+# change $LDAPRUNAS uid and gid if LDAPRUNAS defined.
 #
 oc_runas() {
 	local runas=${1-$LDAPRUNAS}

@@ -7,6 +7,7 @@
 - [openldap](src/openldap/bin/openldap-common.sh) _BREAKING!_ New initialization procedure.
 - [openldap](src/openldap/bin/openldap-common.sh) _BREAKING!_ Utility script `ldap` functionality abandoned, use ldap client tools directly instead.
 - [openldap](src/openldap/bin/openldap-common.sh) Now default ldapi socket is used.
+- [openldap](src/openldap/bin/openldap-common.sh) Revisited RUNAS code.
 - [openldap](src/openldap/config/slapd.ldif) _BREAKING!_ Now no default domain component entry, `dcObject`, is created.
 - [docker](README.md) Reworked documentation.
 - [demo](demo) Now also demonstrate StartTLS and TLS/SSL.

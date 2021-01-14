@@ -16,6 +16,7 @@
 #
 # Phase (0)
 #
+# Check command arguments and handover execution to any custom command
 # Make a RW copy of config and data directory if they are mounted RO.
 # Also check and fix file attributes within these directories.
 #
@@ -33,6 +34,6 @@ openldap_create_db
 #
 # Phase (2)
 #
-# Start slapd or user provided command.
+# Handover execution to the slapd command.
 #
 openldap_entrypoint_cmd

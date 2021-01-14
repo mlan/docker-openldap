@@ -47,6 +47,7 @@ AUT_UID2 ?= ldap
 AUT_ENV  ?= $(NET_ENV) $(AUT_PUB) \
 --name $(AUT_NAME) \
 --hostname $(AUT_FQDN) \
+-e SYSLOG_LEVEL=7 \
 --cap-add=sys_ptrace
 VORW_ENV  ?= -v $(VDB_NAME):/srv
 VORO_ENV  ?= -v $(VDB_NAME):/srv:ro
@@ -225,25 +226,6 @@ test-up_6:
 	docker run -d $(AUT_ENV) $(VORW_ENV) $(UID2_ENV) $(AUT_IMG)
 	docker exec -it $(AUT_NAME) ls -l /srv
 	$(call test_db,$(TST1_ENV),$(BND1_ENV))
-
-test-up_9:
-	#
-	#
-	#
-	# test (9) DOMAIN ROOTCN ROOTPW, ldif cfg.ldif, ldif users.ldif, apply 191-user.ldif, 192-delete.ldif, 193-rename.ldif
-	#
-	#
-	docker run -d $(AUT_ENV) $(ADM2_ENV) $(AUT_IMG)
-	docker cp ldif/b/009-cfg.ldif $(AUT_NAME):/var/lib/openldap/ldif/0/
-	docker cp ldif/a/110-dc.ldif $(AUT_NAME):/var/lib/openldap/ldif/1/
-	docker cp ldif/b/190-users.ldif $(AUT_NAME):/var/lib/openldap/ldif/1/
-	docker start $(AUT_NAME)
-	sleep $(TST_WAIT)
-	docker cp ldif/b $(AUT_NAME):/var/lib/openldap/ldif/
-	docker exec -it $(AUT_NAME) ldap add -f 'ldif_users' /var/lib/openldap/ldif/b/191-user.ldif
-	docker exec -it $(AUT_NAME) ldap add -f 'ldif_users' /var/lib/openldap/ldif/b/192-delete.ldif
-	docker exec -it $(AUT_NAME) ldap add -f 'ldif_users' /var/lib/openldap/ldif/b/193-rename.ldif
-	ldapsearch $(TST9_ENV)
 
 test-finish_%: test-down_%
 	#

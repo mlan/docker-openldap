@@ -1,7 +1,5 @@
 # Road map
 
-## TLS
+## Replication
 
-- client cert __DONE__
-- test case
-- for persistence use `/srv/ssl` __DOC ONLY__
+Document [replication](https://openldap.org/doc/admin24/replication.html).

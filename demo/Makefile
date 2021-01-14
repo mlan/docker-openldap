@@ -11,10 +11,7 @@ AD_DC    ?= $(call ad_cut_dot, 1, 1, $(AD_DOM))
 
 SSL_O     = $(AD_DOM)
 
-SRV_IP   ?= $(call dkr_srv_ip, auth)
-SRV_CNT  ?= $(call dkr_srv_cnt, auth)
-
-srv_list ?= auth dns gui
+SRV_LIST ?= auth dns gui
 
 NET_ENV  ?= --rm --network=demo_backend
 SSL_ENV  ?= $(NET_ENV) \
@@ -31,7 +28,7 @@ init: up auth-init
 test: auth-who_all
 
 web:
-	firefox localhost:8001 &
+	browse http://localhost:8001 &
 
 ps:
 	docker-compose ps
@@ -54,44 +51,44 @@ logs:
 images:
 	docker-compose images
 
-$(addsuffix -up,$(srv_list)):
+$(addsuffix -up,$(SRV_LIST)):
 	docker-compose up -d $(patsubst %-up,%,$@)
 
-$(addsuffix -create,$(srv_list)):
+$(addsuffix -create,$(SRV_LIST)):
 	docker-compose up --no-start $(patsubst %-create,%,$@)
 
-$(addsuffix -down,$(srv_list)):
+$(addsuffix -down,$(SRV_LIST)):
 	docker-compose rm -s $(patsubst %-down,%,$@)
 
-$(addsuffix -restart,$(srv_list)):
+$(addsuffix -restart,$(SRV_LIST)):
 	docker-compose restart $(patsubst %-restart,%,$@)
 
-$(addsuffix -start,$(srv_list)):
+$(addsuffix -start,$(SRV_LIST)):
 	docker-compose start $(patsubst %-start,%,$@)
 
-$(addsuffix -renew,$(srv_list)):
+$(addsuffix -renew,$(SRV_LIST)):
 	docker-compose rm -s $(patsubst %-renew,%,$@)
 	docker-compose up -d $(patsubst %-renew,%,$@)
 
-$(addsuffix -top,$(srv_list)):
+$(addsuffix -top,$(SRV_LIST)):
 	docker-compose top $(patsubst %-top,%,$@)
 
-$(addsuffix -logs,$(srv_list)):
+$(addsuffix -logs,$(SRV_LIST)):
 	docker-compose logs $(patsubst %-logs,%,$@)
 
-$(addsuffix -pull,$(srv_list)):
+$(addsuffix -pull,$(SRV_LIST)):
 	docker-compose pull $(patsubst %-pull,%,$@)
 
-$(addsuffix -sh,$(srv_list)):
+$(addsuffix -sh,$(SRV_LIST)):
 	docker-compose exec $(patsubst %-sh,%,$@) sh -c 'exec $$(getent passwd root | sed "s/.*://g")'
 
-$(addsuffix -env,$(srv_list)):
+$(addsuffix -env,$(SRV_LIST)):
 	docker-compose exec $(patsubst %-env,%,$@) env
 
-$(addsuffix -diff,$(srv_list)):
+$(addsuffix -diff,$(SRV_LIST)):
 	docker container diff $(COMPOSE_PROJECT_NAME)_$(patsubst %-diff,%,$@)_1
 
-$(addsuffix -hosts,$(srv_list)):
+$(addsuffix -hosts,$(SRV_LIST)):
 	docker-compose exec $(patsubst %-hosts,%,$@) cat /etc/hosts
 
 wait_%:
@@ -170,12 +167,12 @@ auth-add_ssl: ssl/auth.crt
 	echo "$$LDIF_ADD_SSL" | docker-compose exec -T auth ldapmodify -Q
 
 auth-show_conf:
-	docker-compose exec auth ldapsearch -b cn=config "(cn=config)"
-	docker-compose exec auth ldapsearch -b cn=config olcDatabase={-1}frontend
-	docker-compose exec auth ldapsearch -b cn=config olcDatabase={1}mdb
+	docker-compose exec auth ldapsearch -QLLLb cn=config "(cn=config)"
+	docker-compose exec auth ldapsearch -QLLLb cn=config olcDatabase={-1}frontend
+	docker-compose exec auth ldapsearch -QLLLb cn=config olcDatabase={1}mdb
 
 auth-show_data:
-	docker-compose exec auth ldapsearch
+	docker-compose exec auth ldapsearch -QLLL
 
 auth-show_cat0:
 	docker-compose exec auth slapcat -n0

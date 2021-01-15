@@ -7,7 +7,7 @@ SSL_O    ?= example.com
 SSL_KEY  ?= rsa:2048 # rsa:2048 rsa:4096
 SSL_MAIL ?=
 SSL_PASS ?= secret
-SSL_SAN  ?= #"subjectAltName=DNS:auth,DNS:*.docker"
+SSL_SAN  ?=
 SSL_TRST ?=
 
 #
@@ -20,9 +20,10 @@ SSL_TRST ?=
 # Usage: SMIME
 #
 #SSL_O     = $(MAIL_DOMAIN)
-#SSL_PASS  = $(LDAP_TEST_USERPW)
-#SSL_TRST  = $(SSL_SMIME)
-#target: ssl/$(LDAP_TEST_USER).p12
+#SSL_MAIL  = auto
+#SSL_PASS  = $(AD_USR_PW)
+##SSL_TRST  = $(SSL_SMIME)
+#target: ssl/$(AD_USR_CN)@$(MAIL_DOMAIN).p12
 SSL_SMIME =  -setalias "Self Signed SMIME" -addtrust emailProtection \
 	-addreject clientAuth -addreject serverAuth
 
@@ -47,7 +48,7 @@ ssl_subj  = -subj "/CN=$(1)/O=$(2)$(if $(3),/emailAddress=$(if $(findstring @,$(
 ssl_extfile = $(if $(1),-extfile <(printf $(1)),)
 
 
-.PRECIOUS: %.csr %.key
+.PRECIOUS: %.crt %.csr %.key
 SHELL   = /bin/bash
 
 #

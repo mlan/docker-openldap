@@ -8,9 +8,13 @@
 BLD_ARG  ?= --build-arg DIST=alpine --build-arg REL=3.12
 BLD_REPO ?= mlan/openldap
 BLD_VER  ?= latest
+
+TST_REPO ?= $(BLD_REPO)
+TST_VER  ?= $(BLD_VER)
 TST_ENV  ?= -C test
 TST_TGTE ?= $(addprefix test-,all cat0 cat1 diff down env htop logs search0 search1 sh top up)
 TST_TGTI ?= test_% test-up_%
+export TST_REPO TST_VER
 
 build: Dockerfile
 	docker build $(BLD_ARG) --tag $(BLD_REPO):$(BLD_VER) .

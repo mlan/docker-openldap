@@ -23,3 +23,12 @@ dkr_srv_ip   = $(shell docker inspect -f \
 #cnt_ip_old = $(shell docker inspect -f \
 #	'{{range .NetworkSettings.Networks}}{{println .IPAddress}}{{end}}' \
 #	$(1) | head -n1)
+
+#
+# List IPs of containers
+#
+ip-list:
+	@for srv in $$(docker ps --format "{{.Names}}"); do \
+	echo $$srv $$(docker inspect -f \
+	'{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $$srv); \
+	done | column -t

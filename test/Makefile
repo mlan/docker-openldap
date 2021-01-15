@@ -5,18 +5,16 @@
 
 -include    *.mk
 
-IMG_REPO ?= mlan/openldap
-IMG_VER  ?= latest
+TST_REPO ?= mlan/openldap
+TST_VER  ?= latest
 
 NET_NAME ?= test-net
 NET_ENV  ?= --network $(NET_NAME)
 
 AD_DOM1  ?= example.com
 AD_DOM2  ?= my-domain.org
-AD_DOM7  ?= dit.dotcom.info
 AD_SUF1  ?= $(call ad_sub_dc,$(AD_DOM1))
 AD_SUF2  ?= $(call ad_sub_dc,$(AD_DOM2))
-AD_SUF7  ?= $(call ad_sub_dc,$(AD_DOM7))
 AD_ADM1  ?= admin
 AD_ADM2  ?= manager
 AD_DN1   ?= $(call ad_cat_dn,$(AD_ADM1),$(AD_SUF1))
@@ -34,8 +32,8 @@ LIF_DIT2 ?= ldif/sample/dit-$(AD_DOM2)-add.ldif
 LIF_CFG1 ?= ldif/sample/cfg-sha512-mod.ldif
 
 AUT_NAME ?= auth
-AUT_DOM  ?= 
-AUT_IMG  ?= $(IMG_REPO):$(IMG_VER)
+AUT_DOM  ?=
+AUT_IMG  ?= $(TST_REPO):$(TST_VER)
 AUT_PORT ?= 401
 AUT_FQDN ?= $(AUT_NAME).$(AD_DOM1)
 AUT_PUB  ?= -p $(AUT_PORT):389
@@ -67,14 +65,9 @@ NOEX_ENV ?= \
 -e LDAP_DONTADDEXTERNAL=true
 NOOB_ENV ?= \
 -e LDAP_DONTADDDCOBJECT=true
-AUT7_ENV ?= $(AUT_ENV) \
--e LDAP_DOMAIN=$(AD_DOM7) \
--e LDAP_EMAILDOMAIN=gmail.com
 
 GREP_ENV ?= --color=always
 
-ADD_ENV1 ?= \
--H ldap://:$(AUT_PORT) -x -D "cn=$(AD_ADM1),$(AD_SUF1)" -w $(AD_ADMPW)
 SRH_ENV ?= \
 -H ldap://:$(AUT_PORT) -xLLL
 BND1_ENV ?= \
@@ -90,20 +83,6 @@ TST1_ENV ?= \
 TST2_ENV ?= \
 -b "$(AD_SUF2)" "o=*" \
 | grep $(GREP_ENV) "dn: $(AD_SUF2)"
-TST3_ENV ?= \
--b "$(AD_SUF1)" "(&(objectclass=person)(cn=Par Robert))" mail \
-| grep $(GREP_ENV) 'mail: RobertP@ns-mail2.com'
-TST7_ENV ?= \
--b "$(AD_SUF7)" "(&(objectclass=person)(cn=Par Robert))" mail \
-| grep $(GREP_ENV) 'mail: RobertP@gmail.com'
-TST9_ENV ?= \
--b "$(AD_SUF2)" "(&(objectclass=person)(cn=Harm Coddington))" mail \
-| grep $(GREP_ENV) 'mail: CoddingH@ns-mail6.com'
-
-CURL_OPT ?= -s -v
-CURL_IMG ?= curlimages/curl
-CURL_ENV ?= $(NET_ENV) \
--i --rm
 
 TST_WAIT ?= 5
 
@@ -277,23 +256,6 @@ test-sh:
 
 test-top:
 	docker exec -it $(AUT_NAME) top
-
-define LDIF_ADD_SSL
-dn: cn=config
-add: olcTLSCACertificateFile
-olcTLSCACertificateFile: /etc/ssl/openldap/ca.crt
--
-add: olcTLSCertificateFile
-olcTLSCertificateFile: /etc/ssl/openldap/auth.crt
--
-add: olcTLSCertificateKeyFile
-olcTLSCertificateKeyFile: /etc/ssl/openldap/auth.key
-endef
-export LDIF_ADD_SSL
-
-test-tls: ssl/ca.key ssl/ca.crt ssl/auth.key ssl/auth.crt
-	docker cp ssl $(AUT_NAME):/etc/ssl/openldap
-	echo "$$LDIF_ADD_SSL" | docker exec -i $(AUT_NAME) ldapadd
 
 host-backup:
 	docker run --name tmp -it -d $(VOLK_ENV) alpine sh

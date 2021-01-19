@@ -1,6 +1,6 @@
 # 2.0.0
 
-- [docker](Dockerfile) Now build using alpine:3.12 (openldap 2.4.50).
+- [docker](Dockerfile) Now build using alpine:3.13 (openldap 2.4.56).
 - [demo](demo) Updated demo.
 - [test](test) Code refactoring.
 - [docker](src/docker/bin/docker-entrypoint.sh) Code refactoring.

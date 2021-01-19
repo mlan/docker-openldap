@@ -5,7 +5,7 @@
 
 -include    *.mk
 
-BLD_ARG  ?= --build-arg DIST=alpine --build-arg REL=3.12
+BLD_ARG  ?= --build-arg DIST=alpine --build-arg REL=3.13
 BLD_REPO ?= mlan/openldap
 BLD_VER  ?= latest
 

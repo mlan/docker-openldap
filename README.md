@@ -1,7 +1,7 @@
 # The `mlan/openldap` repository
 
 ![travis-ci test](https://img.shields.io/travis/mlan/docker-openldap.svg?label=build&style=popout-square&logo=travis)
-![docker build](https://img.shields.io/docker/build/mlan/openldap.svg?label=build&style=popout-square&logo=docker)
+![docker build](https://img.shields.io/docker/cloud/build/mlan/openldap.svg?label=build&style=popout-square&logo=docker)
 ![image Size](https://img.shields.io/docker/image-size/mlan/openldap.svg?label=size&style=popout-square&logo=docker)
 ![docker pulls](https://img.shields.io/docker/pulls/mlan/openldap.svg?label=pulls&style=popout-square&logo=docker)
 ![docker stars](https://img.shields.io/docker/stars/mlan/openldap.svg?label=stars&style=popout-square&logo=docker)

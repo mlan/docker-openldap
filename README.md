@@ -28,7 +28,7 @@ This (non official) Docker image contains an [OpenLDAP](https://www.openldap.org
 
 The MAJOR.MINOR.PATCH [SemVer](https://semver.org/) is used. In addition to the three number version number you can use two or one number versions numbers, which refers to the latest version of the sub series. The tag `latest` references the build based on the latest commit to the repository.
 
-To exemplify the usage of version tags, lets assume that the latest version is `1.2.3`. In this case `latest`, `1.2.3`, `1.2` and `1` all identify the same image.
+To exemplify the usage of version tags, lets assume that the latest version is `2.0.0`. In this case `latest`, `2.0.0`, `2.0` and `2` all identify the same image.
 
 # Usage
 
@@ -46,7 +46,7 @@ The [Lightweight Directory Access Protocol (LDAP)](https://en.wikipedia.org/wiki
 
 The user data itself is mainly stored in elements called attributes. Attributes are basically key-value pairs. Unlike in some other systems, the keys have predefined names which are dictated by the `objectClass` selected for an entry. An entry is basically a collection of attributes under a name used to describe something; a user for example.
 
-```
+```yml
 dn: uid=demo,ou=users,dc=example,dc=com
 objectClass: inetOrgPerson
 cn: demo
@@ -378,6 +378,18 @@ Should you want to run the daemon as a no-privileged user within the container, 
 
 Sometimes you want the daemon and its files to be run by and owed by a specific user and group ID. If so, use `LDAPRUNAS=<uid>:<gid>` or if the `uid` and `gid` is equal `LDAPRUNAS=<uid>:` Example usage: `LDAPRUNAS=120:127` which will run the daemon and have its files owned by user `uid` 120 and group `gid` 127. This can be useful when bind mounting volumes on the docker host.
 
+## Migrating to version 2
+
+There are three changes introduced in version 2 of `mlan/openldap` that needs attention when migrating. First, the environmental variables have new names, see [environment variables](#environment-variables). Second, the builtin utility script `ldap` has been retired, so now use the [LDAP client commands](#manage-databases) directly. Third, [creating databases](#create-databases) does now not initiate the directory database with a `dcObject`, so make sure to add one:
+
+```yml
+dn: dc=example,dc=com
+objectClass: organization
+objectClass: dcObject
+dc: example
+o: example.com
+```
+
 # Knowledge base
 
 Here some topics relevant for directory servers are presented.
@@ -479,9 +491,11 @@ Since you might have a directory server running on the same host as you are runn
 
 # Implementation
 
+Here some implementation details are presented.
+
 ## Database RW and RO file system locations
 
-Typically the   paths are `DOCKER_DB0_DIR=/etc/openldap/slapd.d` and `DOCKER_DB1_DIR=/var/lib/openldap/openldap-data` to the configuration and directory databases.
+Typically the paths are `DOCKER_DB0_DIR=/etc/openldap/slapd.d` and `DOCKER_DB1_DIR=/var/lib/openldap/openldap-data` to the configuration and directory databases.
 To help achieving persistent storage these paths are symbolic links to `DOCKER_DB0_VOL=/srv/conf` and `DOCKER_DB1_VOL=/srv/data` respectively.
 
 In the special case that the any of the directories `/srv/conf` and `/srv/data`

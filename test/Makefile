@@ -8,9 +8,6 @@
 TST_REPO ?= mlan/openldap
 TST_VER  ?= latest
 
-NET_NAME ?= test-net
-NET_ENV  ?= --network $(NET_NAME)
-
 AD_DOM1  ?= example.com
 AD_DOM2  ?= my-domain.org
 AD_SUF1  ?= $(call ad_sub_dc,$(AD_DOM1))
@@ -42,7 +39,7 @@ VBK_NAME ?= $(AUT_NAME)-bak
 VBK_PATH ?= $$(pwd)/ldif
 AUT_UID1 ?= 1001:1011
 AUT_UID2 ?= ldap
-AUT_ENV  ?= $(NET_ENV) $(AUT_PUB) \
+AUT_ENV  ?= $(AUT_PUB) \
 --name $(AUT_NAME) \
 --hostname $(AUT_FQDN) \
 -e SYSLOG_LEVEL=7 \

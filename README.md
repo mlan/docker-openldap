@@ -217,7 +217,7 @@ At first, during container startup, valid config and directory databases are che
 
 In the event that there is no databases, an attempt is made to recreate them from backup [LDIF](https://en.wikipedia.org/wiki/LDAP_Data_Interchange_Format) files. First the config database, number __0__, is recreated and second the directory database, number __1__, is recreated. If no backup files are found the config database is created from a sample LDIF file, but the directory database will not be created.
 
-The file system paths that are searched for backup LDIF files for the config database 0 is defied by `DOCKER_SLAPADD0_PATH="/ldif/0:/0.ldif:/etc/openldap/slapd.ldif"`. And similarly for the directory database 1 the paths searched are `DOCKER_SLAPADD1_PATH="/ldif/1:/1.ldif"`. There are several methods by which backup files can be made available to the container including; bind mount, docker configs, docker secrets and docker cp. If the backup files are [gzip](https://en.wikipedia.org/wiki/Gzip) compressed they will automatically be decompressed.
+The file system paths that are searched for backup LDIF files for the config database 0 is defined by `DOCKER_SLAPADD0_PATH="/ldif/0:/0.ldif:/etc/openldap/slapd.ldif"`. And similarly for the directory database 1 the paths searched are `DOCKER_SLAPADD1_PATH="/ldif/1:/1.ldif"`. There are several methods by which backup files can be made available to the container including; bind mount, docker configs, docker secrets and docker cp. If the backup files are [gzip](https://en.wikipedia.org/wiki/Gzip) compressed they will automatically be decompressed.
 
 For example; to use the backup file `cfg.example.com.ldif`, to recreate the config database, it can be bind mounted into the container
 

@@ -467,7 +467,7 @@ TLS_KEY    ssl/auth.key
 
 ## Recreate the host database
 
-This use case relies on that config and users data are available in an preexisting OpenLDAP server.
+This is assuming you have existing running OpenLDAP server with available configuration and directory database of your users data.
 
 First, create backup `LDIF` files of the host OpenLDAP server databases:
 

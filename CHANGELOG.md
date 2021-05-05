@@ -1,3 +1,7 @@
+# 2.0.1
+
+- [docker](Dockerfile) Support additional modern password-hashing methods SHA256/512.
+
 # 2.0.0
 
 - [docker](Dockerfile) Now build using alpine:3.13 (openldap 2.4.56).

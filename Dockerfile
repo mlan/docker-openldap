@@ -32,6 +32,7 @@ RUN	apk --no-cache --update add \
 	openldap-backend-all \
 	openldap-overlay-all \
 	openldap-clients \
+	openldap-passwd-sha2 \
 	&& rm -rf \
 	$DOCKER_DB0_DIR \
 	$DOCKER_DB1_DIR \

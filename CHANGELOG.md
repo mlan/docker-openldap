@@ -1,3 +1,8 @@
+# 2.0.2
+
+- [docker](src/docker) Now use alpine:3.14 (openldap 2.4.58).
+- [docker](ROADMAP.md) Use [travis-ci.com](https://travis-ci.com/).
+
 # 2.0.1
 
 - [docker](Dockerfile) Support additional modern password-hashing methods SHA256/512.

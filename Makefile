@@ -5,7 +5,7 @@
 
 -include    *.mk
 
-BLD_ARG  ?= --build-arg DIST=alpine --build-arg REL=3.14
+BLD_ARG  ?= --build-arg DIST=alpine --build-arg REL=3.15
 BLD_REPO ?= mlan/openldap
 BLD_VER  ?= latest
 
@@ -16,8 +16,18 @@ TST_TGTE ?= $(addprefix test-,all cat0 cat1 diff down env htop logs search0 sear
 TST_TGTI ?= test_% test-up_%
 export TST_REPO TST_VER
 
+push:
+	#
+	# PLEASE REVIEW THESE IMAGES WHICH ARE ABOUT TO BE PUSHED TO THE REGISTRY
+	#
+	@docker image ls $(BLD_REPO)
+	#
+	# ARE YOU SURE YOU WANT TO PUSH THESE IMAGES TO THE REGISTRY? [yN]
+	@read input; [ "$${input}" = "y" ]
+	docker push --all-tags $(BLD_REPO)
+
 build: Dockerfile
-	docker build $(BLD_ARG) --tag $(BLD_REPO):$(BLD_VER) .
+	docker build $(BLD_ARG) $(addprefix --tag $(BLD_REPO):,$(call bld_tags,,$(BLD_VER))) .
 
 variables:
 	make -pn | grep -A1 "^# makefile"| grep -v "^#\|^--" | sort | uniq

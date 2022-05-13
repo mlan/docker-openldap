@@ -1,3 +1,8 @@
+# 2.1.0
+
+- [docker](src/docker) Now use alpine:3.15 (openldap 2.6.0).
+- [docker](Makefile) Now use functions in bld.mk.
+
 # 2.0.2
 
 - [docker](src/docker) Now use alpine:3.14 (openldap 2.4.58).

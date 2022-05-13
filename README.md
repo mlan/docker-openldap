@@ -1,11 +1,11 @@
 # The `mlan/openldap` repository
 
-![travis-ci test](https://img.shields.io/travis/com/mlan/docker-openldap.svg?label=build&style=popout-square&logo=travis)
-![docker build](https://img.shields.io/docker/cloud/build/mlan/openldap.svg?label=build&style=popout-square&logo=docker)
-![image Size](https://img.shields.io/docker/image-size/mlan/openldap.svg?label=size&style=popout-square&logo=docker)
-![docker pulls](https://img.shields.io/docker/pulls/mlan/openldap.svg?label=pulls&style=popout-square&logo=docker)
-![docker stars](https://img.shields.io/docker/stars/mlan/openldap.svg?label=stars&style=popout-square&logo=docker)
-![github stars](https://img.shields.io/github/stars/mlan/docker-openldap.svg?label=stars&style=popout-square&logo=github)
+![travis-ci test](https://img.shields.io/travis/com/mlan/docker-openldap.svg?label=build&style=flat-square&logo=travis)
+![docker version](https://img.shields.io/docker/v/mlan/openldap?logo=docker&style=flat-square)
+![image size](https://img.shields.io/docker/image-size/mlan/openldap/latest.svg?label=size&style=flat-square&logo=docker)
+![docker pulls](https://img.shields.io/docker/pulls/mlan/openldap.svg?label=pulls&style=flat-square&logo=docker)
+![docker stars](https://img.shields.io/docker/stars/mlan/openldap.svg?label=stars&style=flat-square&logo=docker)
+![github stars](https://img.shields.io/github/stars/mlan/docker-openldap.svg?label=stars&style=flat-square&logo=github)
 
 This (non official) Docker image contains an [OpenLDAP](https://www.openldap.org/) directory server. A directory server typically holds user login credentials, postal and e-mail addresses and similar pieces of information. This image help integrate a directory server with other dockerized services.
 

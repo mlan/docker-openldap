@@ -2,6 +2,7 @@
 
 - [docker](src/docker) Now use alpine:3.15 (openldap 2.6.0).
 - [docker](Makefile) Now use functions in bld.mk.
+- [docker](ROADMAP.md) Update badges.
 
 # 2.0.2
 

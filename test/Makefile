@@ -30,7 +30,7 @@ LIF_CFG1 ?= ldif/sample/cfg-sha512-mod.ldif
 
 AUT_NAME ?= auth
 AUT_DOM  ?=
-AUT_IMG  ?= $(TST_REPO):$(TST_VER)
+AUT_IMG  ?= $(TST_REPO):$(call bld_tag,,$(TST_VER))
 AUT_PORT ?= 401
 AUT_FQDN ?= $(AUT_NAME).$(AD_DOM1)
 AUT_PUB  ?= -p $(AUT_PORT):389

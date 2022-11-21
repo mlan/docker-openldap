@@ -1,5 +1,6 @@
 # 2.1.1
 
+- [test](test/Makefile) Now use `bld_tag` so tests use correct image tag.
 - [docker](src/docker) Now use alpine:3.16 (openldap 2.6.3).
 
 # 2.1.0

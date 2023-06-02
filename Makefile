@@ -5,9 +5,10 @@
 
 -include    *.mk
 
-BLD_ARG  ?= --build-arg DIST=alpine --build-arg REL=3.17
+BLD_ARG  ?= --build-arg DIST=alpine --build-arg REL=3.18
 BLD_REPO ?= mlan/openldap
 BLD_VER  ?= latest
+BLD_KIT  ?= DOCKER_BUILDKIT=1
 
 TST_REPO ?= $(BLD_REPO)
 TST_VER  ?= $(BLD_VER)
@@ -27,7 +28,7 @@ push:
 	docker push --all-tags $(BLD_REPO)
 
 build: Dockerfile
-	docker build $(BLD_ARG) $(addprefix --tag $(BLD_REPO):,$(call bld_tags,,$(BLD_VER))) .
+	$(BLD_KIT) docker build $(BLD_ARG) $(addprefix --tag $(BLD_REPO):,$(call bld_tags,,$(BLD_VER))) .
 
 variables:
 	make -pn | grep -A1 "^# makefile"| grep -v "^#\|^--" | sort | uniq

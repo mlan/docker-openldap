@@ -1,6 +1,6 @@
 # The `mlan/openldap` repository
 
-![travis-ci test](https://img.shields.io/travis/com/mlan/docker-openldap.svg?label=build&style=flat-square&logo=travis)
+![github action ci](https://img.shields.io/github/actions/workflow/status/mlan/docker-openldap/testimage.yml?label=build&style=flat-square&logo=github)
 ![docker version](https://img.shields.io/docker/v/mlan/openldap?logo=docker&style=flat-square)
 ![image size](https://img.shields.io/docker/image-size/mlan/openldap/latest.svg?label=size&style=flat-square&logo=docker)
 ![docker pulls](https://img.shields.io/docker/pulls/mlan/openldap.svg?label=pulls&style=flat-square&logo=docker)
@@ -141,7 +141,7 @@ make test
 Which essentially translates to:
 
 ```sh
-docker-compose exec auth ldapwhoami
+docker compose exec auth ldapwhoami
 ldapwhoami -xH ldap://auth/
 ldapwhoami -H ldaps://auth/
 ldapwhoami -ZZH ldap://auth/
@@ -162,7 +162,7 @@ make auth-show_data
 Which translates to:
 
 ```sh
-docker-compose exec auth ldapsearch
+docker compose exec auth ldapsearch
 ```
 
 When you are done testing you can destroy the test containers, volumes and files by typing:
@@ -208,7 +208,7 @@ volumes:
 The `auth` service is fired up using
 
 ```sh
-docker-compose up -d
+docker compose up -d
 ```
 
 ## Recreate databases
@@ -225,7 +225,7 @@ For example; to use the backup file `cfg.example.com.ldif`, to recreate the conf
 docker run -d --name auth -v $(pwd)/ldif/0/cfg.example.com.ldif:/etc/openldap/slapd.ldif mlan/openldap
 ```
 
-Similarly using docker-compose, both database 0 and 1 can be bind mounted
+Similarly using docker compose, both database 0 and 1 can be bind mounted
 
 ```yaml
 version: '3'
@@ -303,17 +303,17 @@ If, for example, you have the directory database in the file `ldif/sample/dit.my
 docker exec -i auth ldapadd < ldif/sample/dit.my-domain.org.ldif
 ```
 
-If the container was started using docker-compose, use this command to add `ldif/1/dit.example.com.ldif`:
+If the container was started using docker compose, use this command to add `ldif/1/dit.example.com.ldif`:
 
 ```sh
-docker-compose exec -T auth ldapadd < ldif/1/dit.example.com.ldif
+docker compose exec -T auth ldapadd < ldif/1/dit.example.com.ldif
 ```
 
 We list the LDAP client commands here for convenience.
 
 | Command                                                      | Example                                                      |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| [ldapadd](https://www.openldap.net/software/man.cgi?query=ldapadd) | docker-compose exec -T auth ldapadd < add.ldif               |
+| [ldapadd](https://www.openldap.net/software/man.cgi?query=ldapadd) | docker compose exec -T auth ldapadd < add.ldif               |
 | [ldapcompare](https://www.openldap.net/software/man.cgi?query=ldapcompare) | docker exec auth ldapcompare cn=user,dc=example,dc=com sn:user |
 | [ldapdelete](https://www.openldap.net/software/man.cgi?query=ldapdelete) | docker exec auth ldapdelete cn=user,dc=example,dc=com        |
 | [ldapexop](https://www.openldap.net/software/man.cgi?query=ldapexop) | docker exec auth ldapexop whoami                             |

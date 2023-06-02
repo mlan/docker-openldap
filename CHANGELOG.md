@@ -1,6 +1,8 @@
 # 2.1.2
 
-- [docker](src/docker) Now use alpine:3.17 (openldap 2.6.3).
+- [docker](src/docker) Now use alpine:3.18 (openldap 2.6.4).
+- [github](.github/workflows/testimage.yml) Now use GitHub Actions to test image.
+- [demo](demo/Makefile) Now depend on the docker-compose-plugin.
 
 # 2.1.1
 

@@ -31,65 +31,65 @@ web:
 	browse http://localhost:8001 &
 
 ps:
-	docker-compose ps
+	docker compose ps
 
 up:
-	docker-compose up -d
+	docker compose up -d
 
 down:
-	docker-compose down
+	docker compose down
 
 destroy: ssl-destroy
-	docker-compose down -v
+	docker compose down -v
 
 config:
-	docker-compose config
+	docker compose config
 
 logs:
-	docker-compose logs --tail 10
+	docker compose logs --tail 10
 
 images:
-	docker-compose images
+	docker compose images
 
 $(addsuffix -up,$(SRV_LIST)):
-	docker-compose up -d $(patsubst %-up,%,$@)
+	docker compose up -d $(patsubst %-up,%,$@)
 
 $(addsuffix -create,$(SRV_LIST)):
-	docker-compose up --no-start $(patsubst %-create,%,$@)
+	docker compose up --no-start $(patsubst %-create,%,$@)
 
 $(addsuffix -down,$(SRV_LIST)):
-	docker-compose rm -s $(patsubst %-down,%,$@)
+	docker compose rm -s $(patsubst %-down,%,$@)
 
 $(addsuffix -restart,$(SRV_LIST)):
-	docker-compose restart $(patsubst %-restart,%,$@)
+	docker compose restart $(patsubst %-restart,%,$@)
 
 $(addsuffix -start,$(SRV_LIST)):
-	docker-compose start $(patsubst %-start,%,$@)
+	docker compose start $(patsubst %-start,%,$@)
 
 $(addsuffix -renew,$(SRV_LIST)):
-	docker-compose rm -s $(patsubst %-renew,%,$@)
-	docker-compose up -d $(patsubst %-renew,%,$@)
+	docker compose rm -s $(patsubst %-renew,%,$@)
+	docker compose up -d $(patsubst %-renew,%,$@)
 
 $(addsuffix -top,$(SRV_LIST)):
-	docker-compose top $(patsubst %-top,%,$@)
+	docker compose top $(patsubst %-top,%,$@)
 
 $(addsuffix -logs,$(SRV_LIST)):
-	docker-compose logs $(patsubst %-logs,%,$@)
+	docker compose logs $(patsubst %-logs,%,$@)
 
 $(addsuffix -pull,$(SRV_LIST)):
-	docker-compose pull $(patsubst %-pull,%,$@)
+	docker compose pull $(patsubst %-pull,%,$@)
 
 $(addsuffix -sh,$(SRV_LIST)):
-	docker-compose exec $(patsubst %-sh,%,$@) sh -c 'exec $$(getent passwd root | sed "s/.*://g")'
+	docker compose exec $(patsubst %-sh,%,$@) sh -c 'exec $$(getent passwd root | sed "s/.*://g")'
 
 $(addsuffix -env,$(SRV_LIST)):
-	docker-compose exec $(patsubst %-env,%,$@) env
+	docker compose exec $(patsubst %-env,%,$@) env
 
 $(addsuffix -diff,$(SRV_LIST)):
-	docker container diff $(COMPOSE_PROJECT_NAME)_$(patsubst %-diff,%,$@)_1
+	docker container diff $(COMPOSE_PROJECT_NAME)-$(patsubst %-diff,%,$@)-1
 
 $(addsuffix -hosts,$(SRV_LIST)):
-	docker-compose exec $(patsubst %-hosts,%,$@) cat /etc/hosts
+	docker compose exec $(patsubst %-hosts,%,$@) cat /etc/hosts
 
 wait_%:
 	sleep $*
@@ -158,35 +158,35 @@ endef
 export LDIF_ADD_SSL
 
 auth-mod_conf:
-	echo "$$LDIF_MOD_CONF" | docker-compose exec -T auth ldapmodify -Q
+	echo "$$LDIF_MOD_CONF" | docker compose exec -T auth ldapmodify -Q
 
 auth-add_data:
-	echo "$$LDIF_ADD_DATA" | docker-compose exec -T auth ldapmodify -Q
+	echo "$$LDIF_ADD_DATA" | docker compose exec -T auth ldapmodify -Q
 
 auth-add_ssl: ssl/auth.crt
-	echo "$$LDIF_ADD_SSL" | docker-compose exec -T auth ldapmodify -Q
+	echo "$$LDIF_ADD_SSL" | docker compose exec -T auth ldapmodify -Q
 
 auth-show_conf:
-	docker-compose exec auth ldapsearch -QLLLb cn=config "(cn=config)"
-	docker-compose exec auth ldapsearch -QLLLb cn=config olcDatabase={-1}frontend
-	docker-compose exec auth ldapsearch -QLLLb cn=config olcDatabase={1}mdb
+	docker compose exec auth ldapsearch -QLLLb cn=config "(cn=config)"
+	docker compose exec auth ldapsearch -QLLLb cn=config olcDatabase={-1}frontend
+	docker compose exec auth ldapsearch -QLLLb cn=config olcDatabase={1}mdb
 
 auth-show_data:
-	docker-compose exec auth ldapsearch -QLLL
+	docker compose exec auth ldapsearch -QLLL
 
 auth-show_cat0:
-	docker-compose exec auth slapcat -n0
+	docker compose exec auth slapcat -n0
 
 auth-show_cat1:
-	docker-compose exec auth slapcat -n1
+	docker compose exec auth slapcat -n1
 
 auth-show_debug:
-	docker-compose exec auth slapd -d ?
+	docker compose exec auth slapd -d ?
 
 auth-who_all: $(addprefix auth-who_, ldapi ldap ldaps starttls)
 
 auth-who_ldapi:
-	docker-compose exec auth ldapwhoami -Q
+	docker compose exec auth ldapwhoami -Q
 
 auth-who_ldap:
 	docker run $(NET_ENV) mlan/openldap ldapwhoami -xH ldap://auth/
@@ -198,8 +198,8 @@ auth-who_starttls:
 	docker run $(SSL_ENV) mlan/openldap ldapwhoami -ZZQH ldap://auth/
 
 auth-htop: auth-debugtools
-	docker-compose exec auth htop
+	docker compose exec auth htop
 
 auth-debugtools:
-	docker-compose exec auth apk --no-cache --update add \
+	docker compose exec auth apk --no-cache --update add \
 	nano less lsof htop bind-tools iputils strace

@@ -1,3 +1,11 @@
+# 2.1.5
+
+- [docker](src/docker) Now use alpine:3.20 (openldap 2.6.7).
+- [docker](README.md) Remove obsolete element `version` in `yml` examples.
+- [demo](demo/Makefile) Remove unsused service `dns`.
+- [demo](demo/Makefile) Add target `auth-apk_list`.
+- [demo](demo/docker-compose.yml) Remove obsolete element `version` in docker-compose.yml.
+
 # 2.1.4
 
 - [docker](src/docker) Now use alpine:3.19 (openldap 2.6.6).

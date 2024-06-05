@@ -11,7 +11,7 @@ AD_DC    ?= $(call ad_cut_dot, 1, 1, $(AD_DOM))
 
 SSL_O     = $(AD_DOM)
 
-SRV_LIST ?= auth dns gui
+SRV_LIST ?= auth gui
 
 NET_ENV  ?= --rm --network=demo_backend
 SSL_ENV  ?= $(NET_ENV) \
@@ -203,3 +203,6 @@ auth-htop: auth-debugtools
 auth-debugtools:
 	docker compose exec auth apk --no-cache --update add \
 	nano less lsof htop bind-tools iputils strace
+
+auth-apk_list:
+	docker compose exec auth /bin/sh -c 'apk info -sq $$(apk info -q) | sed -r "N;N;s/([^ ]+) installed size:\n([^ ]+) (.).*/\2\3\t\1/" | sort -h'

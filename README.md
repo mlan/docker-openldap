@@ -97,7 +97,7 @@ ldapsearch -H ldap://auth:389/ -b dc=example,dc=com "(&(objectClass=inetOrgPerso
 An example of how to define an OpenLDAP directory service using docker compose is given below. Other services that also use the `backend` network will be able to access the directory service.
 
 ```yaml
-version: '3'
+name: demo
 services:
   auth:
     image: mlan/openldap
@@ -195,7 +195,7 @@ docker run -d --name auth -v auth:/srv mlan/openldap
 Or using [docker compose](https://docs.docker.com/compose/) and a `docker-compose.yml` file
 
 ```yaml
-version: '3'
+name: demo
 services:
   auth:
     image: mlan/openldap
@@ -228,7 +228,7 @@ docker run -d --name auth -v $(pwd)/ldif/0/cfg.example.com.ldif:/etc/openldap/sl
 Similarly using docker compose, both database 0 and 1 can be bind mounted
 
 ```yaml
-version: '3'
+name: demo
 services:
   auth:
     image: mlan/openldap
@@ -240,7 +240,7 @@ services:
 Docker secrets can be used like this
 
 ```yaml
-version: '3'
+name: demo
 services:
   auth:
     image: mlan/openldap
@@ -276,7 +276,7 @@ docker run -d --name auth -e LDAPBASE=dc=sample,dc=org mlan/openldap --root-cn m
 Similarly with docker compose but now using the file `ldif/0/cfg.example.com.ldif` as a template.
 
 ```yaml
-version: '3'
+name: demo
 services:
   auth:
     image: mlan/openldap

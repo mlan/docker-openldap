@@ -5,6 +5,7 @@
 - [demo](demo/Makefile) Remove unsused service `dns`.
 - [demo](demo/Makefile) Add target `auth-apk_list`.
 - [demo](demo/docker-compose.yml) Remove obsolete element `version` in docker-compose.yml.
+- [github](.github/workflows/testimage.yml) Now use Node.js 20 `actions/checkout@v4`.
 
 # 2.1.4
 

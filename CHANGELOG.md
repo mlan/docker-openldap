@@ -1,3 +1,7 @@
+# 2.1.6
+
+- [docker](src/docker) Now use alpine:3.21 (openldap 2.6.8).
+
 # 2.1.5
 
 - [docker](src/docker) Now use alpine:3.20 (openldap 2.6.7).

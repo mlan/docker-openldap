@@ -1,3 +1,11 @@
+# 2.1.7
+
+- [build](Makefile) Now use alpine:3.23 (openldap 2.6.10).
+- [build](Makefile) Updated target `clean`.
+- [openldap](src/openldap/config/slapd.ldif) Now only supply a single name in olcRefintAttribute value.
+- [build](dkr.mk) Harmonize [dkr.mk](dkr.mk) between repositories.
+- [test](test/Makefile) Added sleep before sending the request to the container to ensure it can respond.
+
 # 2.1.6
 
 - [docker](src/docker) Now use alpine:3.21 (openldap 2.6.8).

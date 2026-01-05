@@ -5,7 +5,7 @@
 
 -include    *.mk
 
-BLD_ARG  ?= --build-arg DIST=alpine --build-arg REL=3.21
+BLD_ARG  ?= --build-arg DIST=alpine --build-arg REL=3.23
 BLD_REPO ?= mlan/openldap
 BLD_VER  ?= latest
 BLD_KIT  ?= DOCKER_BUILDKIT=1
@@ -40,7 +40,7 @@ prune:
 	docker image prune -f
 
 clean:
-	docker images | grep $(BLD_REPO) | awk '{print $$1 ":" $$2}' | uniq | xargs docker rmi
+	docker images --all --filter reference=$(BLD_REPO) --format '{{.ID}}'| uniq | xargs docker rmi
 
 $(TST_TGTE):
 	${MAKE} $(TST_ENV) $@

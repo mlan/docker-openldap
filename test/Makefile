@@ -98,6 +98,7 @@ test_%: test-up_% test-finish_%
 define test_db
 	sleep $(TST_WAIT)
 	docker container logs $(AUT_NAME)
+	sleep $(TST_WAIT)
 	docker exec $(AUT_NAME) ldapsearch $(1)
 	$(if $(2),ldapsearch $(SRH_ENV) $(2) $(1),)
 endef
@@ -239,8 +240,8 @@ test-htop: test-debugtools
 test-logs:
 	docker container logs $(AUT_NAME)
 
-test-netstat: test-debugtools
-	docker exec -it $(AUT_NAME) netstat -apnt
+test-netstat:
+	docker exec -it $(AUT_NAME) netstat -apen
 
 test-search0:
 	ldapsearch $(SRH_ENV) $(TST0_ENV)

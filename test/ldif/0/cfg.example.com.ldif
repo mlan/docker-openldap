@@ -122,6 +122,9 @@ objectClass: olcOverlayConfig
 objectClass: olcRefintConfig
 objectClass: top
 olcOverlay: {1}refint
-olcRefintAttribute: memberof member manager owner
+olcRefintAttribute: memberof
+olcRefintAttribute: member
+olcRefintAttribute: manager
+olcRefintAttribute: owner
 
 
